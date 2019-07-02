@@ -37,7 +37,10 @@ typedef struct ControlSignals
     uint8_t aluOp;
     uint8_t memToReg;
     uint8_t memRead;
-    uint8_t branch;
+    uint8_t beq;
+    uint8_t bne;
+    uint8_t blt;
+    uint8_t bge;
     uint8_t jump;
 } ControlSignals;
 

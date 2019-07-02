@@ -27,7 +27,7 @@ bool tickFunc(Core *core)
     int read_data_1 = core->reg_file[rs_1]; 
     int read_data_2 = core->reg_file[rs_2]; 
     
-    int imm = buildImm(unsigned instruction);
+    int imm = buildImm(instruction);
 
     // (Step 3) Pass into mux and from there into ALU
     int result = 0;
@@ -41,7 +41,7 @@ bool tickFunc(Core *core)
     // (Step 4) Memory access, memory access, and register file writeback
     
     // (Step 5) Set PC to the correct value
-    if(branch && zero)
+    if((beq && zero) || (bne && ~zero) || blt || (bge && zero))
     {
         core->PC = branchPC;
     }
@@ -104,7 +104,14 @@ int aluControl(unsigned aluOp, unsigned funct3, unsigned funct7)
     }
     else if(aluOp == 0b01)
     {
-        return 0b0110;
+        if(funct3 == 0b000 || funct3 == 0b001)     // BEQ/BNE
+        {
+            return 0b0110;
+        }                     
+        else if(funct3 == 0b100 || funct3 == 0b101)     // BLT/BGT
+        {
+            return 0b0111;
+        }
     }
     else if(aluOp == 0b10)
     {
@@ -136,7 +143,7 @@ int aluControl(unsigned aluOp, unsigned funct3, unsigned funct7)
     }
 }
 
-void control(ControlSignals *ctrl_signals, unsigned opcode)
+void control(ControlSignals *ctrl_signals, unsigned opcode, uint8_t funct3)
 {
     if(opcode == 0b0110011)             // R-Type
     {
@@ -146,10 +153,10 @@ void control(ControlSignals *ctrl_signals, unsigned opcode)
         ctrl_signals->aluOp = 0b10;
         ctrl_signals->memToReg = 0;
         ctrl_signals->memRead = 0;
-        ctrl_signals->branch = 0;
+        ctrl_signals->beq = 0;
         ctrl_signals->jump = 0;
     }   
-    else if(opcode == 0b0010011)        // I-Type TODO
+    else if(opcode == 0b0010011)        // I-Type
     {
         ctrl_signals->regWrite = 1;
         ctrl_signals->aluSrc = 1;
@@ -157,43 +164,43 @@ void control(ControlSignals *ctrl_signals, unsigned opcode)
         ctrl_signals->aluOp = 0b10;
         ctrl_signals->memToReg = 0;
         ctrl_signals->memRead = 0;
-        ctrl_signals->branch = 0;
+        ctrl_signals->beq = 0;
         ctrl_signals->jump = 0;
     }   
-    else if(opcode == 0b0000011)       // LD TODO
+    else if(opcode == 0b0000011)       // LD
     {
         ctrl_signals->regWrite = 1;
-        ctrl_signals->aluSrc = 0;
+        ctrl_signals->aluSrc = 1;
+        ctrl_signals->memWrite = 0;
+        ctrl_signals->aluOp = 0b00;
+        ctrl_signals->memToReg = 1;
+        ctrl_signals->memRead = 1;
+        ctrl_signals->beq = 0;
+        ctrl_signals->jump = 0;
+    }   
+    else if(opcode == 0b1100111)      // JALR
+    {
+        ctrl_signals->regWrite = 1;
+        ctrl_signals->aluSrc = 1;
         ctrl_signals->memWrite = 0;
         ctrl_signals->aluOp = 0b00;
         ctrl_signals->memToReg = 0;
         ctrl_signals->memRead = 0;
-        ctrl_signals->branch = 0;
-        ctrl_signals->jump = 0;
+        ctrl_signals->beq = 0;
+        ctrl_signals->jump = 1;
     }   
-    else if(opcode == 0b1100111)      // JALR TODO
+    else if(opcode == 0b0100011)    // SD
     {
-        ctrl_signals->regWrite = 1;
-        ctrl_signals->aluSrc = 0;
-        ctrl_signals->memWrite = 0;
-        ctrl_signals->aluOp = 0b110;
-        ctrl_signals->memToReg = 0;
-        ctrl_signals->memRead = 0;
-        ctrl_signals->branch = 0;
-        ctrl_signals->jump = 0;
-    }   
-    else if(opcode == 0b0100011)    // SD TODO
-    {
-        ctrl_signals->regWrite = 1;
-        ctrl_signals->aluSrc = 0;
-        ctrl_signals->memWrite = 0;
+        ctrl_signals->regWrite = 0;
+        ctrl_signals->aluSrc = 1;
+        ctrl_signals->memWrite = 1;
         ctrl_signals->aluOp = 0b00;
         ctrl_signals->memToReg = 0;
         ctrl_signals->memRead = 0;
-        ctrl_signals->branch = 0;
+        ctrl_signals->beq = 0;
         ctrl_signals->jump = 0;
     }   
-    else if(opcode == 0b1100011)    // B-Type TODO
+    else if(opcode == 0b1100011)    // B-Type
     {
         ctrl_signals->regWrite = 0;
         ctrl_signals->aluSrc = 0;
@@ -201,51 +208,88 @@ void control(ControlSignals *ctrl_signals, unsigned opcode)
         ctrl_signals->aluOp = 0b01;
         ctrl_signals->memToReg = 0;
         ctrl_signals->memRead = 0;
-        ctrl_signals->branch = 0;
         ctrl_signals->jump = 0;
+        switch(funct3)
+        {
+        case 0b000:
+            ctrl_signals->beq = 1;
+            ctrl_signals->bne = 0;
+            ctrl_signals->blt = 0;
+            ctrl_signals->bge = 0;
+        case 0b001:
+            ctrl_signals->beq = 0;
+            ctrl_signals->bne = 1;
+            ctrl_signals->blt = 0;
+            ctrl_signals->bge = 0;
+        case 0b100:
+            ctrl_signals->beq = 0;
+            ctrl_signals->bne = 0;
+            ctrl_signals->blt = 1;
+            ctrl_signals->bge = 0;
+        case 0b101:
+            ctrl_signals->beq = 0;
+            ctrl_signals->bne = 0;
+            ctrl_signals->blt = 0;
+            ctrl_signals->bge = 1;
+        }
     }   
-    else if(opcode == 0b1101111)    // JAL TODO
+    else if(opcode == 0b1101111)    // JAL
     {
         ctrl_signals->regWrite = 1;
         ctrl_signals->aluSrc = 0;
         ctrl_signals->memWrite = 0;
-        ctrl_signals->aluOp = 0b110;
+        ctrl_signals->aluOp = 0b00;
         ctrl_signals->memToReg = 0;
         ctrl_signals->memRead = 0;
-        ctrl_signals->branch = 0;
-        ctrl_signals->jump = 0;
+        ctrl_signals->beq = 0;
+        ctrl_signals->jump = 1;
     }   
 }
 
-void registerFileRead(uint64_t *reg_file[NUM_REGS], uint8_t rs_1, uint8_t rs_2, int *read_data_1, int *read_data_2)
+int buildImm(unsigned instr)
 {
-    
-}
-
-void registerFileWrite(uint64_t *reg_file[NUM_REGS], uint8_t rd, uint8_t reg_write, int *w_data)
-{
-    if(rd != 0 && reg_write)
+    int imm = 0;
+    if(opcode == 0b0010011 || opcode == 0b0000011 || opcode == 0b1100111)   // I-Type
     {
-        *reg_file[rd] = w_data;
+        imm |= ((instr & (0b111111111111 << 20)) >> 20);
+        if(imm & 0x800)
+        {
+            imm |= 0xFFFFF000;
+        }
+    }
+    else if(opcode == 0b0100011)        //S-Type
+    {
+        imm |= ((instr & (0b11111 << 7)) >> 7);
+        imm |= ((instr & (0b1111111 << 25)) >> 20);
+        if(imm & 0x800)
+        {
+            imm |= 0xFFFFF000;
+        }
+    }
+    else if(opcode == 0b1100011)        // B-Type
+    {
+        imm |= ((instr & (0b1 << 7)) << 4);
+        imm |= ((instr & (0b1111 << 8)) >> 7); 
+        imm |= ((instr & (0b111111 << 25)) >> 20);
+        imm |= ((instr & (0b1 << 31)) >> 19);
+        if(imm & 0x1000)
+        {
+            imm |= 0xFFFFF000;
+        }
+    }
+    else if(opcode == 0b1101111)        // J-Type
+    {
+        imm |= (instr & 0b11111111000000000000); 
+        imm |= ((instr & (0b100000000000 << 9)) >> 9); 
+        imm |= ((instr & (0b11111111110 << 20)) >> 20); 
+        imm |= ((instr & (0b100000000000000000000 << 11)) >> 11);
+        if(imm & 0x100000)
+        {
+            imm |= 0xFFF00000;
+        }
     }
 
-    if(rs_1 == rd)
-    {
-        *read_data_1 = w_data;
-    }
-    else
-    {
-        *read_data_1 = *reg_file[rs_1]; 
-    }
-
-    if(rs_2 == rd)
-    {
-        *read_data_2 = w_data;
-    }
-    else
-    {
-        *read_data_2 = *reg_file[rs_2]; 
-    }
+    return imm;
 }
 
 /* Pipelined Version Whoops

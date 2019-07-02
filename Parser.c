@@ -179,7 +179,7 @@ void parseIType(char *opr, Instruction *instr)
     reg = strtok(NULL, ", ");
     unsigned rs_1 = regIndex(reg);
     
-    unsigned imm = (unsigned) strtok(NULL, "\n");
+    signed imm = (signed) strtok(NULL, "\n");
 
 
     // Construct instruction
@@ -241,7 +241,7 @@ void parseSType(char *opr, Instruction *instr)
     char *reg = strtok(NULL, ", ");
     unsigned rs_2 = regIndex(reg);
 
-    unsigned imm = (unsigned) strtok(NULL, "(");
+    signed imm = (signed) strtok(NULL, "(");
 
     reg = strtok(NULL, ")");
     reg[strlen(reg)-1] = '\0';
@@ -253,7 +253,7 @@ void parseSType(char *opr, Instruction *instr)
     instr->instruction |= (funct3 << (7 + 5));
     instr->instruction |= (rs_1 << (7 + 5 + 3));
     instr->instruction |= (rs_2 << (7 + 5 + 3 + 5));
-    instr->instruction |= (((imm & 0b111111100000) >> 5) << (7 + 5 + 3 + 5 + 5));
+    instr->instruction |= ((imm & 0b111111100000) << 20); // >> 5 << 7 + 5 + 3 + 5 + 5
 }
 
 void parseBType(char *opr, Instruction *instr)
@@ -285,17 +285,17 @@ void parseBType(char *opr, Instruction *instr)
     reg = strtok(NULL, ", ");
     unsigned rs_2 = regIndex(reg);
 
-    unsigned imm = (unsigned) strtok(NULL, "\n");
+    signed imm = (signed) strtok(NULL, "\n");
 
     // Contruct instruction
     instr->instruction |= opcode;
-    instr->instruction |= (((imm & 0b100000000000)  >> 11) << 7);
-    instr->instruction |= (((imm & 0b11110)  >> 1) << (7 + 1));
+    instr->instruction |= ((imm & 0b100000000000) >> 4); // >> 11 << 7
+    instr->instruction |= ((imm & 0b11110) << 7); // >> 1 << 7 + 1
     instr->instruction |= (funct3 << (7 + 1 + 4));
     instr->instruction |= (rs_1 << (7 + 1 + 4 + 3));
     instr->instruction |= (rs_2 << (7 + 1 + 4 + 3 + 5));
-    instr->instruction |= (((imm & 0b11111100000) >> 5) << (7 + 1 + 4 + 3 + 5 + 5));
-    instr->instruction |= (((imm & 0b1000000000000) >> 12) << (7 + 1 + 4 + 3 + 5 + 5 + 6));
+    instr->instruction |= ((imm & 0b11111100000) << 20); // >> 5 << 7 + 1 + 4 + 3 + 5 + 5
+    instr->instruction |= ((imm & 0b1000000000000) << 19); // >> 12 << 7 + 1 + 4 + 3 + 5 + 5 + 6
 }
 
 void parseJType(char *opr, Instruction *instr)
@@ -313,15 +313,15 @@ void parseJType(char *opr, Instruction *instr)
 
     char *imm = strtok(NULL, ", ");
     imm[strlen(imm)-1] = '\0';
-    unsigned imm = (unsigned) *imm;
+    signed imm = (signed) *imm;
 
     // Contruct instruction
     instr->instruction |= opcode;
     instr->instruction |= (rd << 7);
-    instr->instruction |= (((imm & 0b11111111000000000000) >> 12) << (7 + 5));
-    instr->instruction |= (((imm & 0b100000000000) >> 11) << (7 + 5 + 8));
-    instr->instruction |= (((imm & 0b11111111110) >> 1) << (7 + 5 + 8 + 1));
-    instr->instruction |= (((imm & 0b100000000000000000000) >> 20) << (7 + 5 + 8 + 1 + 10));
+    instr->instruction |= (imm & 0b11111111000000000000); // >> 12 << 7 + 5
+    instr->instruction |= ((imm & 0b100000000000) << 9); // >> 11 << 7 + 5 + 8
+    instr->instruction |= ((imm & 0b11111111110) << 20); // >> 1 << 7 + 5 + 8 + 1
+    instr->instruction |= ((imm & 0b100000000000000000000) << 11); // >> 20 << 7 + 5 + 8 + 1 + 10;
 }
 
 int regIndex(char *reg)
