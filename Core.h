@@ -7,6 +7,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#define NUM_REGS 64
+#define NUM_BYTES 1024
 #define BOOL bool
 
 struct Core;
@@ -19,6 +21,8 @@ typedef struct Core
     // TODO, define your components here
     // What else you need? Data memory? Register file?
     Instruction_Memory *instr_mem;
+    uint64_t regFile[NUM_REGS];
+    uint8_t data_mem[NUM_BYTES];
     
     // TODO, simulation function
     bool (*tick)(Core *core);
