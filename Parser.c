@@ -178,10 +178,8 @@ void parseIType(char *opr, Instruction *instr)
 
     reg = strtok(NULL, ", ");
     unsigned rs_1 = regIndex(reg);
-
-    char* imm = strtok(NULL, ", ");
-    imm[strlen(imm)-1] = '\0';
-    unsigned imm = (unsigned) *imm;
+    
+    unsigned imm = (unsigned) strtok(NULL, "\n");
 
 
     // Construct instruction
@@ -287,9 +285,7 @@ void parseBType(char *opr, Instruction *instr)
     reg = strtok(NULL, ", ");
     unsigned rs_2 = regIndex(reg);
 
-    char *imm = strtok(NULL, ", ");
-    imm[strlen(imm)-1] = '\0';
-    unsigned imm = (unsigned) *imm;
+    unsigned imm = (unsigned) strtok(NULL, "\n");
 
     // Contruct instruction
     instr->instruction |= opcode;

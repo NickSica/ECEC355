@@ -21,12 +21,25 @@ typedef struct Core
     // TODO, define your components here
     // What else you need? Data memory? Register file?
     Instruction_Memory *instr_mem;
-    uint64_t regFile[NUM_REGS];
+    uint64_t reg_file[NUM_REGS];
     uint8_t data_mem[NUM_BYTES];
     
     // TODO, simulation function
     bool (*tick)(Core *core);
-}Core;
+} Core;
+
+typedef struct ControlSignals ControlSignals;
+typedef struct ControlSignals
+{
+    uint8_t regWrite;
+    uint8_t aluSrc;
+    uint8_t memWrite;
+    uint8_t aluOp;
+    uint8_t memToReg;
+    uint8_t memRead;
+    uint8_t branch;
+    uint8_t jump;
+} ControlSignals;
 
 Core *initCore(Instruction_Memory *i_mem);
 bool tickFunc(Core *core);
