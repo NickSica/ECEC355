@@ -12,7 +12,6 @@ Core *initCore(Instruction_Memory *i_mem)
     memset(core->data_mem, 0, NUM_BYTES*sizeof(core->data_mem[0]));
 }
 
-// FIXME, implement this function
 bool tickFunc(Core *core)
 {
     // Steps may include
@@ -96,7 +95,7 @@ bool tickFunc(Core *core)
         core->PC += 4;
     }
     
-
+    free(ctrl_signals);
     ++core->clk;
     // Are we reaching the final instruction?
     if (core->PC > core->instr_mem->last->addr)
