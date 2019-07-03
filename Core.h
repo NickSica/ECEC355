@@ -18,14 +18,11 @@ typedef struct Core
 {
     Tick clk; // Keep track of core clock
     Addr PC; // Keep track of program counter
-
-    // TODO, define your components here
-    // What else you need? Data memory? Register file?
     Instruction_Memory *instr_mem;
     uint64_t reg_file[NUM_REGS];
     uint8_t data_mem[NUM_BYTES];
     
-    // TODO, simulation function
+    // Simulation function
     bool (*tick)(Core *core);
 } Core;
 

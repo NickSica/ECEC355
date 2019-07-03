@@ -1,4 +1,5 @@
 #include "Core.h"
+#include "Instruction.h" // Delete after
 
 Core *initCore(Instruction_Memory *i_mem)
 {
@@ -9,6 +10,7 @@ Core *initCore(Instruction_Memory *i_mem)
     core->tick = tickFunc;
     memset(core->reg_file, 0, NUM_REGS*sizeof(core->reg_file[0]));
     memset(core->data_mem, 0, NUM_BYTES*sizeof(core->data_mem[0]));
+    return core;
 }
 
 bool tickFunc(Core *core)
