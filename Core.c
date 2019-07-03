@@ -20,7 +20,7 @@ bool tickFunc(Core *core)
     
     // (Step 2) Pass into control, register file, immediate and ALU Control
     ControlSignals *ctrl_signals = (ControlSignals *) malloc(sizeof(ControlSignals));
-    control(ctrlSignals, (instruction & 0b1111111));
+    control(ctrlSignals, (instruction & 0b1111111), (instruction & (0b111 << 12));
     
     uint8_t rs_1 = (instruction & 0b11111000000000000000) >> 15;
     uint8_t rs_2 = (instruction & 0b1111100000000000000000000) >> 20;
@@ -31,17 +31,55 @@ bool tickFunc(Core *core)
 
     // (Step 3) Pass into mux and from there into ALU
     int result = 0;
+    int operand_2;
     uint8_t zero = 0;
+    uint8_t alu_ctrl;
 
+    if(ctrl_signals->aluSrc)
+    {
+        operand_2 = imm;
+    }
+    else
+    {
+        operand_2 = read_data_2;
+    }
 
-    aluControl();
-    alu(operand_1, operand_2, alu_ctrl, &result, &zero);
+    alu_ctrl = aluControl(ctrl_signals->aluOp, (instruction & (0b111 << 12), (instruction & (0b1111111 << 25));
+    alu(read_data_1, operand_2, alu_ctrl, &result, &zero);
 
 
     // (Step 4) Memory access, memory access, and register file writeback
+    int ram_data;
+    int w_data;
+    uint8_t rd = instruction & (0b11111 << 7);
+
+    if(ctrl_signals->memWrite)
+    {
+        core->data_mem[result] = read_data_2;
+    }
+    if(ctrl_signals->memRead)
+    {
+        ram_data = core->data_mem[result];
+    }
+
+    if(core->memToReg)
+    {
+        w_data = ram_data;
+    }
+    else
+    {
+        w_data = result;
+    }
+
+    if(rd != 0 && ctrl_signals->regWrite)
+    {
+        *reg_file[rd] = w_data;
+    }
+
     
+
     // (Step 5) Set PC to the correct value
-    if((beq && zero) || (bne && ~zero) || blt || (bge && zero))
+    if((beq && zero) || (bne && ~zero) || (blt && result)|| (bge && (~result || zero))
     {
         core->PC = branchPC;
     }
@@ -64,7 +102,7 @@ bool tickFunc(Core *core)
     return true;
 }
 
-void alu(int r_data_1, int r_data_2, int ctrl_signal, int *result, uint8_t *zero)
+void alu(int r_data_1, int r_data_2, uint8_t ctrl_signal, int *result, uint8_t *zero)
 {
     *zero = (r_data_1 == r_data_2);
     switch(ctrl_signal)
@@ -96,7 +134,7 @@ void alu(int r_data_1, int r_data_2, int ctrl_signal, int *result, uint8_t *zero
     }
 }
 
-int aluControl(unsigned aluOp, unsigned funct3, unsigned funct7)
+uint8_t aluControl(unsigned aluOp, unsigned funct3, unsigned funct7)
 {
     if(aluOp == 0)
     {
