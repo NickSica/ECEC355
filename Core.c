@@ -63,7 +63,7 @@ bool tickFunc(Core *core)
         ram_data = core->data_mem[result];
     }
 
-    if(core->memToReg)
+    if(ctrl_signals->memToReg)
     {
         w_data = ram_data;
     }
@@ -74,7 +74,7 @@ bool tickFunc(Core *core)
 
     if(rd != 0 && ctrl_signals->regWrite)
     {
-        *reg_file[rd] = w_data;
+        core->reg_file[rd] = w_data;
     }
 
     
@@ -83,7 +83,7 @@ bool tickFunc(Core *core)
     unsigned branch_PC = core->PC + (imm << 1);
     unsigned jump_PC = core->PC + (imm);
 
-    if((ctrl_signals->beq && zero) || (ctrl_signals->bne && ~zero) || (ctrl_signals->blt && result)|| (ctrl_signals->bge && (~result || zero))
+    if((ctrl_signals->beq && zero) || (ctrl_signals->bne && ~zero) || (ctrl_signals->blt && result)|| (ctrl_signals->bge && (~result || zero)))
     {
         core->PC = branch_PC;
     }
@@ -291,6 +291,7 @@ void control(ControlSignals *ctrl_signals, unsigned opcode, uint8_t funct3)
 int buildImm(unsigned instr)
 {
     int imm = 0;
+    unsigned opcode = (instr & 0b1111111);
     if(opcode == 0b0010011 || opcode == 0b0000011 || opcode == 0b1100111)   // I-Type
     {
         imm |= ((instr & (0b111111111111 << 20)) >> 20);
