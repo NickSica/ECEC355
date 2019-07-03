@@ -7,8 +7,8 @@ Core *initCore(Instruction_Memory *i_mem)
     core->PC = 0;
     core->instr_mem = i_mem;
     core->tick = tickFunc;
-    core->regFile = 0;
-    core->data_mem = 0;
+    core->reg_file = {0};
+    core->data_mem = {0};
 }
 
 // FIXME, implement this function
@@ -20,7 +20,7 @@ bool tickFunc(Core *core)
     
     // (Step 2) Pass into control, register file, immediate and ALU Control
     ControlSignals *ctrl_signals = (ControlSignals *) malloc(sizeof(ControlSignals));
-    control(ctrlSignals, (instruction & 0b1111111), (instruction & (0b111 << 12));
+    control(ctrl_signals, (instruction & 0b1111111), (instruction & (0b111 << 12)));
     
     uint8_t rs_1 = (instruction & 0b11111000000000000000) >> 15;
     uint8_t rs_2 = (instruction & 0b1111100000000000000000000) >> 20;

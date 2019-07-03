@@ -1,7 +1,5 @@
 #include "Parser.h"
 
-// FIXME, implement this function.
-// Here shows an example on how to translate "add x10, x10, x25"
 void loadInstructions(Instruction_Memory *i_mem, const char *trace)
 {
     printf("Loading trace file: %s\n", trace);
@@ -155,11 +153,11 @@ void parseIType(char *opr, Instruction *instr)
     {
         funct3 = 0b101;
     }
-    else if(strcmp(raw_instr, "srli") == 0)
+    else if(strcmp(opr, "srli") == 0)
     {
         funct3 = 0b100;
     }
-    else if(strcmp(raw_instr, "ori")  == 0)
+    else if(strcmp(opr, "ori")  == 0)
     {
         funct3 = 0b110;
     }

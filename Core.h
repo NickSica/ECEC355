@@ -46,5 +46,8 @@ typedef struct ControlSignals
 
 Core *initCore(Instruction_Memory *i_mem);
 bool tickFunc(Core *core);
+void alu(int r_data_1, int r_data_2, uint8_t ctrl_signal, int *result, uint8_t *zero);
+void control(ControlSignals *ctrl_signals, unsigned opcode, uint8_t funct3);
+int buildImm(unsigned instr);
 
 #endif
