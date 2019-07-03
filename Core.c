@@ -7,8 +7,8 @@ Core *initCore(Instruction_Memory *i_mem)
     core->PC = 0;
     core->instr_mem = i_mem;
     core->tick = tickFunc;
-    core->reg_file = {0};
-    core->data_mem = {0};
+    memset(core->reg_file, 0, NUM_REGS*sizeof(core->reg_file[0]));
+    memset(core->data_mem, 0, NUM_BYTES*sizeof(core->data_mem[0]));
 }
 
 // FIXME, implement this function
@@ -44,7 +44,7 @@ bool tickFunc(Core *core)
         operand_2 = read_data_2;
     }
 
-    alu_ctrl = aluControl(ctrl_signals->aluOp, (instruction & (0b111 << 12), (instruction & (0b1111111 << 25));
+    alu_ctrl = aluControl(ctrl_signals->aluOp, (instruction & (0b111 << 12)), (instruction & (0b1111111 << 25)));
     alu(read_data_1, operand_2, alu_ctrl, &result, &zero);
 
 

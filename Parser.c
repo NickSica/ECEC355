@@ -97,11 +97,11 @@ void parseRType(char *opr, Instruction *instr)
     {
         funct3 = 0b101;
     }
-    else if(strcmp(raw_instr, "xor") == 0)
+    else if(strcmp(opr, "xor") == 0)
     {
         funct3 = 0b100;
     }
-    else if(strcmp(raw_instr, "or")  == 0)
+    else if(strcmp(opr, "or")  == 0)
     {
         funct3 = 0b110;
     }
@@ -309,9 +309,7 @@ void parseJType(char *opr, Instruction *instr)
     char *reg = strtok(NULL, ", ");
     unsigned rd = regIndex(reg);
 
-    char *imm = strtok(NULL, ", ");
-    imm[strlen(imm)-1] = '\0';
-    signed imm = (signed) *imm;
+    signed imm = (signed) strtok(NULL, "\n");
 
     // Contruct instruction
     instr->instruction |= opcode;
