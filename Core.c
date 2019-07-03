@@ -1,5 +1,5 @@
 #include "Core.h"
-#include "Instruction.h" // Delete after
+#include "Registers.h"
 
 Core *initCore(Instruction_Memory *i_mem)
 {
@@ -96,6 +96,15 @@ bool tickFunc(Core *core)
         core->PC += 4;
     }
     
+
+    printf("\nInstruction Done\n");
+    int i;
+    for(i = 0; i < NUM_REGS; i++)
+    {
+        printf("%s: ", REGISTER_NAME[i]);
+        printf("%u\n", core->reg_file[i]);
+    }
+
     free(ctrl_signals);
     ++core->clk;
     // Are we reaching the final instruction?
