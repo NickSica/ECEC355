@@ -177,7 +177,7 @@ void parseIType(char *opr, Instruction *instr)
     reg = strtok(NULL, ", ");
     unsigned rs_1 = regIndex(reg);
     
-    int16_t imm = strtol(strtok(NULL, "\n"));
+    int16_t imm = strtol(strtok(NULL, "\n"), NULL, 10);
 
 
     // Construct instruction
@@ -239,7 +239,7 @@ void parseSType(char *opr, Instruction *instr)
     char *reg = strtok(NULL, ", ");
     unsigned rs_2 = regIndex(reg);
 
-    int16_t imm = strtol(strtok(NULL, "("));
+    int16_t imm = strtol(strtok(NULL, "("), NULL, 10);
 
     reg = strtok(NULL, ")");
     reg[strlen(reg)-1] = '\0';
@@ -283,7 +283,7 @@ void parseBType(char *opr, Instruction *instr)
     reg = strtok(NULL, ", ");
     unsigned rs_2 = regIndex(reg);
 
-    int16_t imm = strtol(strtok(NULL, "\n"));
+    int16_t imm = strtol(strtok(NULL, "\n"), NULL, 10);
 
     // Contruct instruction
     instr->instruction |= opcode;
@@ -309,7 +309,7 @@ void parseJType(char *opr, Instruction *instr)
     char *reg = strtok(NULL, ", ");
     unsigned rd = regIndex(reg);
 
-    int16_t imm = strtol(strtok(NULL, "\n"));
+    int16_t imm = strtol(strtok(NULL, "\n"), NULL, 10);
 
     // Contruct instruction
     instr->instruction |= opcode;
