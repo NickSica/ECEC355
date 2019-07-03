@@ -1,4 +1,3 @@
-#include <string.h>
 #include "Core.h"
 
 Core *initCore(Instruction_Memory *i_mem)
