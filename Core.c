@@ -1,3 +1,4 @@
+#include <string.h>
 #include "Core.h"
 
 Core *initCore(Instruction_Memory *i_mem)
@@ -79,13 +80,16 @@ bool tickFunc(Core *core)
     
 
     // (Step 5) Set PC to the correct value
-    if((beq && zero) || (bne && ~zero) || (blt && result)|| (bge && (~result || zero))
+    unsigned branch_PC = core->PC + (imm << 1);
+    unsigned jump_PC = core->PC + (imm);
+
+    if((ctrl_signals->beq && zero) || (ctrl_signals->bne && ~zero) || (ctrl_signals->blt && result)|| (ctrl_signals->bge && (~result || zero))
     {
-        core->PC = branchPC;
+        core->PC = branch_PC;
     }
-    else if(jump)
+    else if(ctrl_signals->jump)
     {
-        core->PC = jumpPC;
+        core->PC = jump_PC;
     }
     else
     {
