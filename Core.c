@@ -23,8 +23,9 @@ bool tickFunc(Core *core)
     ControlSignals *ctrl_signals = (ControlSignals *) malloc(sizeof(ControlSignals));
     control(ctrl_signals, (instruction & 0b1111111), (instruction & (0b111 << 12)));
     
-    uint8_t rs_1 = (instruction & 0b11111000000000000000) >> 15;
-    uint8_t rs_2 = (instruction & 0b1111100000000000000000000) >> 20;
+    uint8_t rs_1 = (instruction & (0b11111 << 15)) >> 15;
+    uint8_t rs_2 = (instruction & (0b11111 << 20)) >> 20;
+    uint8_t rd = (instruction & (0b11111 << 7)) >> 7;
     int read_data_1 = core->reg_file[rs_1]; 
     int read_data_2 = core->reg_file[rs_2]; 
     
@@ -45,14 +46,13 @@ bool tickFunc(Core *core)
         operand_2 = read_data_2;
     }
 
-    alu_ctrl = aluControl(ctrl_signals->aluOp, (instruction & (0b111 << 12)), (instruction & (0b1111111 << 25)));
+    alu_ctrl = aluControl(ctrl_signals->aluOp, ((instruction & (0b111 << 12)) >> 12), ((instruction & (0b1111111 << 25)) >> 25));
     alu(read_data_1, operand_2, alu_ctrl, &result, &zero);
 
 
     // (Step 4) Memory access, memory access, and register file writeback
     int ram_data;
     int w_data;
-    uint8_t rd = instruction & (0b11111 << 7);
 
     if(ctrl_signals->memWrite)
     {
@@ -97,12 +97,13 @@ bool tickFunc(Core *core)
     }
     
 
-    printf("\nInstruction Done\n");
+    printf("\nInstruction: %u\n", instruction);
+    printf("%u     %u     %u     %d      %d\n", rd, rs_1, rs_2, imm, result);
     int i;
     for(i = 0; i < NUM_REGS; i++)
     {
         printf("%s: ", REGISTER_NAME[i]);
-        printf("%u\n", core->reg_file[i]);
+        printf("%lu\n", core->reg_file[i]);
     }
 
     free(ctrl_signals);
@@ -117,6 +118,7 @@ bool tickFunc(Core *core)
 
 void alu(int r_data_1, int r_data_2, uint8_t ctrl_signal, int *result, uint8_t *zero)
 {
+    printf("%u", ctrl_signal);
     *zero = (r_data_1 == r_data_2);
     switch(ctrl_signal)
     {
@@ -147,8 +149,9 @@ void alu(int r_data_1, int r_data_2, uint8_t ctrl_signal, int *result, uint8_t *
     }
 }
 
-uint8_t aluControl(unsigned aluOp, unsigned funct3, unsigned funct7)
+uint8_t aluControl(uint8_t aluOp, uint8_t funct3, uint8_t funct7)
 {
+    printf("\n%u     %u     %u\n", aluOp, funct3, funct7);
     if(aluOp == 0)
     {
         return 0b0010;
