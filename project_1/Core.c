@@ -57,17 +57,22 @@ bool tickFunc(Core *core)
     alu(read_data_1, operand_2, alu_ctrl, &result, &zero);
 
 
-    // (Step 4) Memory access, memory access, and register file writeback
-    int ram_data;
+    // (Step 4) Memory access and register file writeback
+    int64_t ram_data = 0;
     int w_data;
 
     if(ctrl_signals->memWrite)
     {
-        core->data_mem[result] = read_data_2;
+        core->data_mem[result] = 0;
+        int i = 0;
+        for(i = 0; i < 8; i++)
+            core->data_mem[result+i] = (read_data_2 & (0xFF << (i * 8)));
     }
     if(ctrl_signals->memRead)
     {
-        ram_data = core->data_mem[result];
+        int i = 0;
+        for(i = 0; i < 8; i++)
+            ram_data |= core->data_mem[result+i] << (i * 8);
     }
 
     if(ctrl_signals->memToReg)
