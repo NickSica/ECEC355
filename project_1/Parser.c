@@ -116,8 +116,8 @@ void parseRType(char *opr, Instruction *instr)
     reg = strtok(NULL, ", ");
     unsigned rs_1 = regIndex(reg);
 
-    reg = strtok(NULL, ", ");
-    reg[strlen(reg)-1] = '\0';
+    reg = strtok(NULL, "\n");
+    trim(reg);
     unsigned rs_2 = regIndex(reg);
 
     // Contruct instruction
@@ -256,7 +256,7 @@ void parseSType(char *opr, Instruction *instr)
     int16_t imm = strtol(strtok(NULL, "("), &strRemainder, 10);
 
     reg = strtok(NULL, ")");
-    reg[strlen(reg)-1] = '\0';
+    trim(reg);
     unsigned rs_1 = regIndex(reg);
 
     // Contruct instruction
@@ -348,4 +348,24 @@ int regIndex(char *reg)
     }
 
     return i;
+}
+
+void trim(char *reg)
+{
+    int i =0;
+    while(i < strlen(reg))
+    {
+        if(reg[i] == *" ")
+        {
+            memmove(&reg[i], &(reg[i])+1, strlen(reg)-1);
+        }
+        else if(reg[i] == *"\n" || reg[i] == *"\r")
+        {
+            reg[i] = 0;
+        }
+        else
+        {
+            i++;
+        }
+    }
 }

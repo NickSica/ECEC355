@@ -39,7 +39,8 @@ typedef struct ControlSignals
     uint8_t bne;
     uint8_t blt;
     uint8_t bge;
-    uint8_t jump;
+    uint8_t jal;
+    uint8_t jalr;
 } ControlSignals;
 
 Core *initCore(Instruction_Memory *i_mem);
