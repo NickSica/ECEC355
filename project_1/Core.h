@@ -21,7 +21,7 @@ typedef struct Core
     Instruction_Memory *instr_mem;
     uint64_t reg_file[NUM_REGS];
     uint8_t data_mem[NUM_BYTES];
-    
+    int count;
     // Simulation function
     bool (*tick)(Core *core);
 } Core;
@@ -51,3 +51,4 @@ void control(ControlSignals *ctrl_signals, unsigned opcode, uint8_t funct3);
 int buildImm(unsigned instr);
 
 #endif
+

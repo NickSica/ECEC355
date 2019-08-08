@@ -10,6 +10,7 @@ Core *initCore(Instruction_Memory *i_mem)
     core->tick = tickFunc;
     memset(core->reg_file, 0, NUM_REGS*sizeof(core->reg_file[0]));
     memset(core->data_mem, 0, NUM_BYTES*sizeof(core->data_mem[0]));
+    /* Example Trace
     core->reg_file[25] = 4;
     core->reg_file[10] = 4;
     core->reg_file[22] = 1;
@@ -17,6 +18,20 @@ Core *initCore(Instruction_Memory *i_mem)
     core->data_mem[8] = 128;
     core->data_mem[16] = 8;
     core->data_mem[24] = 4;
+    */
+
+    /* Matrix  */
+    core->reg_file[1] = core->instr_mem->last->addr;
+    core->reg_file[2] = NUM_BYTES - 8;
+    core->reg_file[10] = 0;
+    core->reg_file[11] = 128;
+    
+    int i;
+    for(i = 0; i < 16; i++)
+	core->data_mem[i*8] = i;
+
+    
+    core->count = 0;
     return core;
 }
 
@@ -26,6 +41,7 @@ bool tickFunc(Core *core)
     // (Step 1) Reading instruction from instruction memory
     unsigned instruction = core->instr_mem->instructions[core->PC / 4].instruction;
     
+
     // (Step 2) Pass into control, register file, immediate and ALU Control
     ControlSignals *ctrl_signals = (ControlSignals *) malloc(sizeof(ControlSignals));
     control(ctrl_signals, (instruction & 0b1111111), ((instruction & (0b111 << 12)) >> 12));
@@ -94,7 +110,6 @@ bool tickFunc(Core *core)
     }
 
     
-
     // (Step 5) Set PC to the correct value
     unsigned branch_PC = core->PC + imm;
     unsigned jump_PC;
@@ -117,16 +132,19 @@ bool tickFunc(Core *core)
         core->PC += 4;
     }
     
-
+//    int i;
+    /*
     printf("\nInstruction: %u\n", instruction);
-    printf("%u     %u     %u     %d      %d\n", rd, rs_1, rs_2, imm, result);
-    int i;
+    printf("rd: %u    rs1: %u    rs2: %u    imm: %d    result: %d\n", rd, rs_1, rs_2, imm, result);
+    
     for(i = 0; i < NUM_REGS; i++)
-    {
-        printf("%s: ", REGISTER_NAME[i]);
-        printf("%lu\n", core->reg_file[i]);
-    }
-
+        printf("%s: %lu\n", REGISTER_NAME[i], core->reg_file[i]);
+    */
+    /*   for(i = 0; i < NUM_BYTES; i++)
+	 printf("%lu\n", core->data_mem[i]);*/
+    printf("%d\n", core->count);
+    core->count++;
+    
     free(ctrl_signals);
     ++core->clk;
     // Are we reaching the final instruction?
@@ -139,7 +157,7 @@ bool tickFunc(Core *core)
 
 void alu(int r_data_1, int r_data_2, uint8_t ctrl_signal, int *result, uint8_t *zero)
 {
-    printf("%u", ctrl_signal);
+    //printf("%u", ctrl_signal);
     *zero = (r_data_1 == r_data_2);
     switch(ctrl_signal)
     {
@@ -172,7 +190,7 @@ void alu(int r_data_1, int r_data_2, uint8_t ctrl_signal, int *result, uint8_t *
 
 uint8_t aluControl(uint8_t aluOp, uint8_t funct3, uint8_t funct7)
 {
-    printf("\n%u     %u     %u\n", aluOp, funct3, funct7);
+    //printf("\n%u     %u     %u\n", aluOp, funct3, funct7);
     if(aluOp == 0)
     {
         return 0b0010;
