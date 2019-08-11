@@ -1,13 +1,13 @@
-            addi x28, x0, 4             # constant 4 for beq
-            addi x5, x0, 0              # i = 0
-I_LOOP:     beq x5, x28, END_I_LOOP     # i >= 4, branch
-            addi x6, x0, 0              # j = 0
-            slli x29, x5, 3             # i * 8
+            addi x18, x0, 4             # constant 4 for beq
+            addi x19, x0, 0             # i = 0
+I_LOOP:     beq x19, x18, END_I_LOOP    # i >= 4, branch
+            addi x20, x0, 0             # j = 0
+            slli x29, x19, 3            # i * 8
             add x29, x29, x11           # i * 8 + base address of out
             sd x0, 0(x29)               # out[i] = 0
-J_LOOP:     beq x6, x28, END_J_LOOP     # j >= 4, branch
-            slli x7, x5, 2              # i * 4
-            add x7, x7, x6              # i * 4 + j
+J_LOOP:     beq x20, x18, END_J_LOOP    # j >= 4, branch
+            slli x7, x19, 2             # i * 4
+            add x7, x7, x20             # i * 4 + j
             slli x7, x7, 3              # (i * 4 + j) * 8
             add x7, x7, x10             # (i * 4 + j) * 8 + base address of mat
             ld x7, 0(x7)                # x7 = mat[i*4+j]
@@ -16,7 +16,7 @@ J_LOOP:     beq x6, x28, END_J_LOOP     # j >= 4, branch
             sd x1, -16(x2)              # store ra after that
             addi x2, x2, -24            # move stack pointer to next free spot
             addi x10, x7, 0             # move x7 to function arg 
-            addi x11, x5, 0             # move i to function arg
+            addi x11, x20, 0            # move i to function arg
             jal x1, SHIFT               # jump to SHIFT, storing return address in ra
             addi x7, x10, 0             # move return value to x7
             addi x2, x2, 24             # restore stack pointer to original spot
@@ -26,9 +26,9 @@ J_LOOP:     beq x6, x28, END_J_LOOP     # j >= 4, branch
             ld x30, 0(x29)              # load out[i]
             add x30, x30, x7            # add returned shift value(x7) to whatever was in out[i] 
             sd x30, 0(x29)              # store out[i] + x7
-            addi x6, x6, 1              # j++
+            addi x20, x20, 1            # j++
             beq x0, x0, J_LOOP          # jump back to top of j
-END_J_LOOP: addi x5, x5, 1              # i++
+END_J_LOOP: addi x19, x19, 1            # i++
             beq x0, x0, I_LOOP          # jump back to top of i loop
 END_I_LOOP: jalr x1, 0(x1)              # jump to the instruction after wherever the function was called from
 SHIFT:      sll x10, x10, x11           # arg1 << arg2
