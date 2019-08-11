@@ -10,7 +10,7 @@ Core *initCore(Instruction_Memory *i_mem)
     core->tick = tickFunc;
     memset(core->reg_file, 0, NUM_REGS*sizeof(core->reg_file[0]));
     memset(core->data_mem, 0, NUM_BYTES*sizeof(core->data_mem[0]));
-    /* Example Trace
+    /* Example Trace */ /*
     core->reg_file[25] = 4;
     core->reg_file[10] = 4;
     core->reg_file[22] = 1;
@@ -20,18 +20,16 @@ Core *initCore(Instruction_Memory *i_mem)
     core->data_mem[24] = 4;
     */
 
-    /* Matrix  */
+    /* Matrix  */ /* */
     core->reg_file[1] = core->instr_mem->last->addr;
     core->reg_file[2] = NUM_BYTES - 8;
     core->reg_file[10] = 0;
     core->reg_file[11] = 128;
-    
-    int i;
-    for(i = 0; i < 16; i++)
+    /* */
+
+    for(int i = 0; i < 16; i++)
 	core->data_mem[i*8] = i;
 
-    
-    core->count = 0;
     return core;
 }
 
@@ -44,10 +42,11 @@ bool tickFunc(Core *core)
     // (Step 2) Pass into control, register file, immediate and ALU Control
     ControlSignals *ctrl_signals = (ControlSignals *) malloc(sizeof(ControlSignals));
     control(ctrl_signals, (instruction & 0b1111111), ((instruction & (0b111 << 12)) >> 12));
-    
+
+    uint8_t rd = (instruction & (0b11111 << 7)) >> 7;
     uint8_t rs_1 = (instruction & (0b11111 << 15)) >> 15;
     uint8_t rs_2 = (instruction & (0b11111 << 20)) >> 20;
-    uint8_t rd = (instruction & (0b11111 << 7)) >> 7;
+    
     int read_data_1 = core->reg_file[rs_1]; 
     int read_data_2 = core->reg_file[rs_2]; 
     
@@ -60,17 +59,16 @@ bool tickFunc(Core *core)
     uint8_t alu_ctrl;
 
     if(ctrl_signals->aluSrc)
-    {
         operand_2 = imm;
-    }
     else
-    {
         operand_2 = read_data_2;
-    }
 
-    alu_ctrl = aluControl(ctrl_signals->aluOp, ((instruction & (0b111 << 12)) >> 12), ((instruction & (0b1111111 << 25)) >> 25));
+    uint8_t funct7 = ((instruction & (0b1111111 << 25)) >> 25);
+    if((instruction & 0b1111111) == 0b0010011)
+	funct7 = 0;
+    
+    alu_ctrl = aluControl(ctrl_signals->aluOp, ((instruction & (0b111 << 12)) >> 12), funct7);
     alu(read_data_1, operand_2, alu_ctrl, &result, &zero);
-
 
     // (Step 4) Memory access and register file writeback
     int64_t ram_data = 0;
@@ -79,14 +77,13 @@ bool tickFunc(Core *core)
     if(ctrl_signals->memWrite)
     {
         core->data_mem[result] = 0;
-        int i = 0;
-        for(i = 0; i < 8; i++)
+        for(int i = 0; i < 8; i++)
             core->data_mem[result+i] = (read_data_2 & (0xFF << (i * 8)));
     }
+
     if(ctrl_signals->memRead)
     {
-        int i = 0;
-        for(i = 0; i < 8; i++)
+        for(int i = 0; i < 8; i++)
             ram_data |= core->data_mem[result+i] << (i * 8);
     }
 
@@ -131,26 +128,27 @@ bool tickFunc(Core *core)
         core->PC += 4;
     }
     
-//    int i;
-    /*
     printf("\nInstruction: %u\n", instruction);
     printf("rd: %u    rs1: %u    rs2: %u    imm: %d    result: %d\n", rd, rs_1, rs_2, imm, result);
-    
-    for(i = 0; i < NUM_REGS; i++)
+
+    for(int i = 0; i < NUM_REGS; i++)
         printf("%s: %lu\n", REGISTER_NAME[i], core->reg_file[i]);
-    */
-    /*   for(i = 0; i < NUM_BYTES; i++)
-	 printf("%lu\n", core->data_mem[i]);*/
-    printf("%d\n", core->count);
-    core->count++;
-    
+
+    for(int i = 0; i < NUM_BYTES; i += 8)
+    {
+	int data = 0;
+	for(int j = 0; j < 7; j++)
+	{
+	    data |= (core->data_mem[i+j] << (j * 8));
+	}
+	printf("Data Address %d: %u\n", i, data);
+    }
+
     free(ctrl_signals);
     ++core->clk;
     // Are we reaching the final instruction?
     if (core->PC > core->instr_mem->last->addr)
-    {
         return false;
-    }
     return true;
 }
 
@@ -209,7 +207,7 @@ uint8_t aluControl(uint8_t aluOp, uint8_t funct3, uint8_t funct7)
     {
         switch(funct3)
         {
-        case 0:         
+        case 0b000:         
             if(funct7 == 0b0000000)                 // ADD
             {
                 return 0b0010;

@@ -7,7 +7,7 @@ I_LOOP:     beq x5, x28, END_I_LOOP     # i >= 4, branch
             sd x0, 0(x29)               # out[i] = 0
 J_LOOP:     beq x6, x28, END_J_LOOP     # j >= 4, branch
             slli x7, x5, 2              # i * 4
-            addi x7, x7, x6             # i * 4 + j
+            add x7, x7, x6              # i * 4 + j
             slli x7, x7, 3              # (i * 4 + j) * 8
             add x7, x7, x10             # (i * 4 + j) * 8 + base address of mat
             ld x7, 0(x7)                # x7 = mat[i*4+j]
