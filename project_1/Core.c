@@ -10,7 +10,7 @@ Core *initCore(Instruction_Memory *i_mem)
     core->tick = tickFunc;
     memset(core->reg_file, 0, NUM_REGS*sizeof(core->reg_file[0]));
     memset(core->data_mem, 0, NUM_BYTES*sizeof(core->data_mem[0]));
-    /* Example Trace */ /*
+    /* UNCOMMENT TO SET DEFAULT VALUES FOR example_cpu_trace */ /*
     core->reg_file[25] = 4;
     core->reg_file[10] = 4;
     core->reg_file[22] = 1;
@@ -20,12 +20,12 @@ Core *initCore(Instruction_Memory *i_mem)
     core->data_mem[24] = 4;
     */
 
-    /* Matrix  */ /* */
+    /* UNCOMMENT  TO SET DEFAULT VALUES FOR matrix  */ /* 
     core->reg_file[1] = core->instr_mem->last->addr;
     core->reg_file[2] = NUM_BYTES - 8;
     core->reg_file[10] = 0;
     core->reg_file[11] = 128;
-    /* */
+    */
 
     for(int i = 0; i < 16; i++)
 	core->data_mem[i*8] = i;
@@ -127,7 +127,8 @@ bool tickFunc(Core *core)
     {
         core->PC += 4;
     }
-    
+
+    /* UNCOMMENT TO PRINT OUT THE INSTRUCTIONS, REGISTERS, AND DATA MEMORY
     printf("\nInstruction: %u\n", instruction);
     printf("rd: %u    rs1: %u    rs2: %u    imm: %d    result: %d\n", rd, rs_1, rs_2, imm, result);
 
@@ -143,6 +144,7 @@ bool tickFunc(Core *core)
 	}
 	printf("Data Address %d: %u\n", i, data);
     }
+    */
 
     free(ctrl_signals);
     ++core->clk;
@@ -154,7 +156,6 @@ bool tickFunc(Core *core)
 
 void alu(int r_data_1, int r_data_2, uint8_t ctrl_signal, int *result, uint8_t *zero)
 {
-    //printf("%u", ctrl_signal);
     *zero = (r_data_1 == r_data_2);
     switch(ctrl_signal)
     {
@@ -187,7 +188,6 @@ void alu(int r_data_1, int r_data_2, uint8_t ctrl_signal, int *result, uint8_t *
 
 uint8_t aluControl(uint8_t aluOp, uint8_t funct3, uint8_t funct7)
 {
-    //printf("\n%u     %u     %u\n", aluOp, funct3, funct7);
     if(aluOp == 0)
     {
         return 0b0010;

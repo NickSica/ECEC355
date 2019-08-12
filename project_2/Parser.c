@@ -116,10 +116,10 @@ void parseRType(char *opr, Instruction *instr)
     reg = strtok(NULL, ", ");
     unsigned rs_1 = regIndex(reg);
 
-    reg = strtok(NULL, ", ");
-    reg[strlen(reg)-1] = '\0';
+    reg = strtok(NULL, "\n");
+    reg++;
     unsigned rs_2 = regIndex(reg);
-
+    
     // Contruct instruction
     instr->instruction |= opcode;
     instr->instruction |= (rd << 7);
@@ -134,7 +134,6 @@ void parseIType(char *opr, Instruction *instr)
     instr->instruction = 0;
     unsigned opcode = 0b0010011;
     unsigned funct3 = 0b000;
-    unsigned funct7 = 0b0000000;
 
     if(strcmp(opr, "ld") == 0) 
     {
@@ -151,11 +150,11 @@ void parseIType(char *opr, Instruction *instr)
     }
     else if(strcmp(opr, "xori") == 0) 
     {
-        funct3 = 0b101;
+        funct3 = 0b100;
     }
     else if(strcmp(opr, "srli") == 0)
     {
-        funct3 = 0b100;
+        funct3 = 0b101;
     }
     else if(strcmp(opr, "ori")  == 0)
     {
@@ -168,7 +167,7 @@ void parseIType(char *opr, Instruction *instr)
     else if(strcmp(opr, "jalr") == 0)
     {
         opcode = 0b1100111;
-        funct3 = 0b111;
+        funct3 = 0b000;
     }
 
     char *reg = strtok(NULL, ", ");
@@ -176,7 +175,7 @@ void parseIType(char *opr, Instruction *instr)
 
     int16_t imm;
     unsigned rs_1;
-    if(strcmp(opr, "ld") == 0)
+    if(strcmp(opr, "ld") == 0 || strcmp(opr, "jalr") == 0)
     {
         char *strRemainder;
         imm = strtol(strtok(NULL, "("), &strRemainder, 10);
@@ -256,7 +255,6 @@ void parseSType(char *opr, Instruction *instr)
     int16_t imm = strtol(strtok(NULL, "("), &strRemainder, 10);
 
     reg = strtok(NULL, ")");
-    reg[strlen(reg)-1] = '\0';
     unsigned rs_1 = regIndex(reg);
 
     // Contruct instruction

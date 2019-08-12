@@ -21,7 +21,7 @@ typedef struct Core
     Instruction_Memory *instr_mem;
     uint64_t reg_file[NUM_REGS];
     uint8_t data_mem[NUM_BYTES];
-    
+
     // Simulation function
     bool (*tick)(Core *core);
 } Core;
@@ -39,15 +39,9 @@ typedef struct ControlSignals
     uint8_t bne;
     uint8_t blt;
     uint8_t bge;
-    uint8_t jump;
+    uint8_t jal;
+    uint8_t jalr;
 } ControlSignals;
-
-typedef struct IFtoID;
-typedef struct IFtoID
-{
-    Addr branchPC;
-    Instruction_Memory *instr_mem;
-} IFtoID;
 
 Core *initCore(Instruction_Memory *i_mem);
 bool tickFunc(Core *core);
@@ -57,3 +51,4 @@ void control(ControlSignals *ctrl_signals, unsigned opcode, uint8_t funct3);
 int buildImm(unsigned instr);
 
 #endif
+

@@ -13,4 +13,4 @@ void parseSType(char *opr, Instruction *instr);
 void parseBType(char *opr, Instruction *instr);
 void parseJType(char *opr, Instruction *instr);
 int regIndex(char *reg);
-
+void trim(char *reg);

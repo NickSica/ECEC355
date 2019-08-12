@@ -10,6 +10,26 @@ Core *initCore(Instruction_Memory *i_mem)
     core->tick = tickFunc;
     memset(core->reg_file, 0, NUM_REGS*sizeof(core->reg_file[0]));
     memset(core->data_mem, 0, NUM_BYTES*sizeof(core->data_mem[0]));
+    /* UNCOMMENT TO SET DEFAULT VALUES FOR example_cpu_trace */ /*
+    core->reg_file[25] = 4;
+    core->reg_file[10] = 4;
+    core->reg_file[22] = 1;
+    core->data_mem[0] = 16;
+    core->data_mem[8] = 128;
+    core->data_mem[16] = 8;
+    core->data_mem[24] = 4;
+    */
+
+    /* UNCOMMENT  TO SET DEFAULT VALUES FOR matrix  */ /* 
+    core->reg_file[1] = core->instr_mem->last->addr;
+    core->reg_file[2] = NUM_BYTES - 8;
+    core->reg_file[10] = 0;
+    core->reg_file[11] = 128;
+    */
+
+    for(int i = 0; i < 16; i++)
+	core->data_mem[i*8] = i;
+
     return core;
 }
 
@@ -18,14 +38,15 @@ bool tickFunc(Core *core)
     // Steps may include
     // (Step 1) Reading instruction from instruction memory
     unsigned instruction = core->instr_mem->instructions[core->PC / 4].instruction;
-    
+
     // (Step 2) Pass into control, register file, immediate and ALU Control
     ControlSignals *ctrl_signals = (ControlSignals *) malloc(sizeof(ControlSignals));
-    control(ctrl_signals, (instruction & 0b1111111), (instruction & (0b111 << 12)));
-    
+    control(ctrl_signals, (instruction & 0b1111111), ((instruction & (0b111 << 12)) >> 12));
+
+    uint8_t rd = (instruction & (0b11111 << 7)) >> 7;
     uint8_t rs_1 = (instruction & (0b11111 << 15)) >> 15;
     uint8_t rs_2 = (instruction & (0b11111 << 20)) >> 20;
-    uint8_t rd = (instruction & (0b11111 << 7)) >> 7;
+    
     int read_data_1 = core->reg_file[rs_1]; 
     int read_data_2 = core->reg_file[rs_2]; 
     
@@ -38,34 +59,41 @@ bool tickFunc(Core *core)
     uint8_t alu_ctrl;
 
     if(ctrl_signals->aluSrc)
-    {
         operand_2 = imm;
-    }
     else
-    {
         operand_2 = read_data_2;
-    }
 
-    alu_ctrl = aluControl(ctrl_signals->aluOp, ((instruction & (0b111 << 12)) >> 12), ((instruction & (0b1111111 << 25)) >> 25));
+    uint8_t funct7 = ((instruction & (0b1111111 << 25)) >> 25);
+    if((instruction & 0b1111111) == 0b0010011)
+	funct7 = 0;
+    
+    alu_ctrl = aluControl(ctrl_signals->aluOp, ((instruction & (0b111 << 12)) >> 12), funct7);
     alu(read_data_1, operand_2, alu_ctrl, &result, &zero);
 
-
-    // (Step 4) Memory access, memory access, and register file writeback
-    int ram_data;
+    // (Step 4) Memory access and register file writeback
+    int64_t ram_data = 0;
     int w_data;
 
     if(ctrl_signals->memWrite)
     {
-        core->data_mem[result] = read_data_2;
+        core->data_mem[result] = 0;
+        for(int i = 0; i < 8; i++)
+            core->data_mem[result+i] = (read_data_2 & (0xFF << (i * 8)));
     }
+
     if(ctrl_signals->memRead)
     {
-        ram_data = core->data_mem[result];
+        for(int i = 0; i < 8; i++)
+            ram_data |= core->data_mem[result+i] << (i * 8);
     }
 
     if(ctrl_signals->memToReg)
     {
         w_data = ram_data;
+    }
+    else if(ctrl_signals->jal || ctrl_signals->jalr)
+    {
+        w_data = core->PC + 4;
     }
     else
     {
@@ -78,16 +106,20 @@ bool tickFunc(Core *core)
     }
 
     
-
     // (Step 5) Set PC to the correct value
-    unsigned branch_PC = core->PC + (imm << 1);
-    unsigned jump_PC = core->PC + (imm);
+    unsigned branch_PC = core->PC + imm;
+    unsigned jump_PC;
 
-    if((ctrl_signals->beq && zero) || (ctrl_signals->bne && ~zero) || (ctrl_signals->blt && result)|| (ctrl_signals->bge && (~result || zero)))
+    if(ctrl_signals->jal)
+        jump_PC = core->PC + imm;
+    else if(ctrl_signals->jalr)
+        jump_PC = result;
+
+    if((ctrl_signals->beq && zero) || (ctrl_signals->bne && !zero) || (ctrl_signals->blt && result) || (ctrl_signals->bge && (~result || zero)))
     {
         core->PC = branch_PC;
     }
-    else if(ctrl_signals->jump)
+    else if(ctrl_signals->jal || ctrl_signals->jalr)
     {
         core->PC = jump_PC;
     }
@@ -95,30 +127,35 @@ bool tickFunc(Core *core)
     {
         core->PC += 4;
     }
-    
 
+    /* UNCOMMENT TO PRINT OUT THE INSTRUCTIONS, REGISTERS, AND DATA MEMORY
     printf("\nInstruction: %u\n", instruction);
-    printf("%u     %u     %u     %d      %d\n", rd, rs_1, rs_2, imm, result);
-    int i;
-    for(i = 0; i < NUM_REGS; i++)
+    printf("rd: %u    rs1: %u    rs2: %u    imm: %d    result: %d\n", rd, rs_1, rs_2, imm, result);
+
+    for(int i = 0; i < NUM_REGS; i++)
+        printf("%s: %lu\n", REGISTER_NAME[i], core->reg_file[i]);
+
+    for(int i = 0; i < NUM_BYTES; i += 8)
     {
-        printf("%s: ", REGISTER_NAME[i]);
-        printf("%lu\n", core->reg_file[i]);
+	int data = 0;
+	for(int j = 0; j < 7; j++)
+	{
+	    data |= (core->data_mem[i+j] << (j * 8));
+	}
+	printf("Data Address %d: %u\n", i, data);
     }
+    */
 
     free(ctrl_signals);
     ++core->clk;
     // Are we reaching the final instruction?
     if (core->PC > core->instr_mem->last->addr)
-    {
         return false;
-    }
     return true;
 }
 
 void alu(int r_data_1, int r_data_2, uint8_t ctrl_signal, int *result, uint8_t *zero)
 {
-    printf("%u", ctrl_signal);
     *zero = (r_data_1 == r_data_2);
     switch(ctrl_signal)
     {
@@ -151,7 +188,6 @@ void alu(int r_data_1, int r_data_2, uint8_t ctrl_signal, int *result, uint8_t *
 
 uint8_t aluControl(uint8_t aluOp, uint8_t funct3, uint8_t funct7)
 {
-    printf("\n%u     %u     %u\n", aluOp, funct3, funct7);
     if(aluOp == 0)
     {
         return 0b0010;
@@ -171,7 +207,7 @@ uint8_t aluControl(uint8_t aluOp, uint8_t funct3, uint8_t funct7)
     {
         switch(funct3)
         {
-        case 0:         
+        case 0b000:         
             if(funct7 == 0b0000000)                 // ADD
             {
                 return 0b0010;
@@ -208,7 +244,8 @@ void control(ControlSignals *ctrl_signals, unsigned opcode, uint8_t funct3)
         ctrl_signals->memToReg = 0;
         ctrl_signals->memRead = 0;
         ctrl_signals->beq = 0;
-        ctrl_signals->jump = 0;
+        ctrl_signals->jal = 0;
+        ctrl_signals->jalr = 0;
     }   
     else if(opcode == 0b0010011)        // I-Type
     {
@@ -219,7 +256,8 @@ void control(ControlSignals *ctrl_signals, unsigned opcode, uint8_t funct3)
         ctrl_signals->memToReg = 0;
         ctrl_signals->memRead = 0;
         ctrl_signals->beq = 0;
-        ctrl_signals->jump = 0;
+        ctrl_signals->jal = 0;
+        ctrl_signals->jalr = 0;
     }   
     else if(opcode == 0b0000011)       // LD
     {
@@ -230,7 +268,8 @@ void control(ControlSignals *ctrl_signals, unsigned opcode, uint8_t funct3)
         ctrl_signals->memToReg = 1;
         ctrl_signals->memRead = 1;
         ctrl_signals->beq = 0;
-        ctrl_signals->jump = 0;
+        ctrl_signals->jal = 0;
+        ctrl_signals->jalr = 0;
     }   
     else if(opcode == 0b1100111)      // JALR
     {
@@ -241,7 +280,8 @@ void control(ControlSignals *ctrl_signals, unsigned opcode, uint8_t funct3)
         ctrl_signals->memToReg = 0;
         ctrl_signals->memRead = 0;
         ctrl_signals->beq = 0;
-        ctrl_signals->jump = 1;
+        ctrl_signals->jal = 0;
+        ctrl_signals->jalr = 1;
     }   
     else if(opcode == 0b0100011)    // SD
     {
@@ -252,7 +292,8 @@ void control(ControlSignals *ctrl_signals, unsigned opcode, uint8_t funct3)
         ctrl_signals->memToReg = 0;
         ctrl_signals->memRead = 0;
         ctrl_signals->beq = 0;
-        ctrl_signals->jump = 0;
+        ctrl_signals->jal = 0;
+        ctrl_signals->jalr = 0;
     }   
     else if(opcode == 0b1100011)    // B-Type
     {
@@ -262,7 +303,8 @@ void control(ControlSignals *ctrl_signals, unsigned opcode, uint8_t funct3)
         ctrl_signals->aluOp = 0b01;
         ctrl_signals->memToReg = 0;
         ctrl_signals->memRead = 0;
-        ctrl_signals->jump = 0;
+        ctrl_signals->jal = 0;
+        ctrl_signals->jalr = 0;
         switch(funct3)
         {
         case 0b000:
@@ -270,21 +312,25 @@ void control(ControlSignals *ctrl_signals, unsigned opcode, uint8_t funct3)
             ctrl_signals->bne = 0;
             ctrl_signals->blt = 0;
             ctrl_signals->bge = 0;
+            break;
         case 0b001:
             ctrl_signals->beq = 0;
             ctrl_signals->bne = 1;
             ctrl_signals->blt = 0;
             ctrl_signals->bge = 0;
+            break;
         case 0b100:
             ctrl_signals->beq = 0;
             ctrl_signals->bne = 0;
             ctrl_signals->blt = 1;
             ctrl_signals->bge = 0;
+            break;
         case 0b101:
             ctrl_signals->beq = 0;
             ctrl_signals->bne = 0;
             ctrl_signals->blt = 0;
             ctrl_signals->bge = 1;
+            break;
         }
     }   
     else if(opcode == 0b1101111)    // JAL
@@ -296,7 +342,8 @@ void control(ControlSignals *ctrl_signals, unsigned opcode, uint8_t funct3)
         ctrl_signals->memToReg = 0;
         ctrl_signals->memRead = 0;
         ctrl_signals->beq = 0;
-        ctrl_signals->jump = 1;
+        ctrl_signals->jal = 1;
+        ctrl_signals->jalr = 0;
     }   
 }
 
@@ -346,31 +393,3 @@ int buildImm(unsigned instr)
 
     return imm;
 }
-
-/* Pipelined Version Whoops
-void registerFileRW(uint64_t *reg_file[NUM_REGS], uint8_t rs_1, uint8_t rs_2, uint8_t rd, uint8_t reg_write, int *w_data, int *read_data_1, int *read_data_2)
-{
-    if(rd != 0 && reg_write)
-    {
-        *reg_file[rd] = w_data;
-    }
-
-    if(rs_1 == rd)
-    {
-        *read_data_1 = w_data;
-    }
-    else
-    {
-        *read_data_1 = *reg_file[rs_1]; 
-    }
-
-    if(rs_2 == rd)
-    {
-        *read_data_2 = w_data;
-    }
-    else
-    {
-        *read_data_2 = *reg_file[rs_2]; 
-    }
-}
-*/
