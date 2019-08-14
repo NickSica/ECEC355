@@ -5,20 +5,17 @@ Core *initCore(Instruction_Memory *i_mem)
 {
     Core *core = (Core *)malloc(sizeof(Core));
     core->clk = 0;
-    core->PC = 0;
     core->instr_mem = i_mem;
     core->tick = tickFunc;
     memset(core->reg_file, 0, NUM_REGS*sizeof(core->reg_file[0]));
     memset(core->data_mem, 0, NUM_BYTES*sizeof(core->data_mem[0]));
-    /* UNCOMMENT TO SET DEFAULT VALUES FOR example_cpu_trace */ /*
-    core->reg_file[25] = 4;
-    core->reg_file[10] = 4;
-    core->reg_file[22] = 1;
-    core->data_mem[0] = 16;
-    core->data_mem[8] = 128;
-    core->data_mem[16] = 8;
-    core->data_mem[24] = 4;
-    */
+
+    core->instr_fetch = malloc(sizeof(IF));
+    core->instr_fetch->PC = 0;
+    core->id = malloc(sizeof(ID));
+    core->ex = malloc(sizeof(EX));
+    core->mem = malloc(sizeof(MEM));
+    core->wb = malloc(sizeof(WB));
 
     /* UNCOMMENT  TO SET DEFAULT VALUES FOR matrix  */ /* 
     core->reg_file[1] = core->instr_mem->last->addr;
@@ -35,6 +32,22 @@ Core *initCore(Instruction_Memory *i_mem)
 
 bool tickFunc(Core *core)
 {
+    core->id->instruction = core->instr_fetch->instruction;
+    core->id->PC = core->instr_fetch->PC;
+    core->instr_fetch->instruction = core->instr_mem->instructions[core->PC / 4].instruction;
+    
+    
+
+
+
+
+
+
+
+
+
+
+    
     // Steps may include
     // (Step 1) Reading instruction from instruction memory
     unsigned instruction = core->instr_mem->instructions[core->PC / 4].instruction;
@@ -152,6 +165,11 @@ bool tickFunc(Core *core)
     if (core->PC > core->instr_mem->last->addr)
         return false;
     return true;
+}
+
+void hazard_detection()
+{
+    
 }
 
 void alu(int r_data_1, int r_data_2, uint8_t ctrl_signal, int *result, uint8_t *zero)

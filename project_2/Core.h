@@ -8,6 +8,12 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "IF.h"
+#include "ID.h"
+#include "EX.h"
+#include "MEM.h"
+#include "WB.h"
+
 #define NUM_REGS 64
 #define NUM_BYTES 1024
 #define BOOL bool
@@ -21,27 +27,15 @@ typedef struct Core
     Instruction_Memory *instr_mem;
     uint64_t reg_file[NUM_REGS];
     uint8_t data_mem[NUM_BYTES];
+    IF *instr_fetch;
+    ID *id;
+    EX *ex;
+    MEM *mem;
+    WB *wb;
 
     // Simulation function
     bool (*tick)(Core *core);
 } Core;
-
-typedef struct ControlSignals ControlSignals;
-typedef struct ControlSignals
-{
-    uint8_t regWrite;
-    uint8_t aluSrc;
-    uint8_t memWrite;
-    uint8_t aluOp;
-    uint8_t memToReg;
-    uint8_t memRead;
-    uint8_t beq;
-    uint8_t bne;
-    uint8_t blt;
-    uint8_t bge;
-    uint8_t jal;
-    uint8_t jalr;
-} ControlSignals;
 
 Core *initCore(Instruction_Memory *i_mem);
 bool tickFunc(Core *core);
