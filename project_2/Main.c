@@ -25,5 +25,10 @@ int main(int argc, const char *argv[])
 
     printf("Simulation is finished.\n");
 
+    free(core->instr_fetch);
+    free(core->id);
+    free(core->ex);
+    free(core->mem);
+    free(core->wb);
     free(core);    
 }

@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "HazardDetection.h"
 #include "IF.h"
 #include "ID.h"
 #include "EX.h"
@@ -23,7 +24,6 @@ typedef struct Core Core;
 typedef struct Core
 {
     Tick clk; // Keep track of core clock
-    Addr PC; // Keep track of program counter
     Instruction_Memory *instr_mem;
     uint64_t reg_file[NUM_REGS];
     uint8_t data_mem[NUM_BYTES];
@@ -39,10 +39,9 @@ typedef struct Core
 
 Core *initCore(Instruction_Memory *i_mem);
 bool tickFunc(Core *core);
-void alu(int r_data_1, int r_data_2, uint8_t ctrl_signal, int *result, uint8_t *zero);
-uint8_t aluControl(uint8_t aluOp, uint8_t funct3, uint8_t funct7);
-void control(ControlSignals *ctrl_signals, unsigned opcode, uint8_t funct3);
-int buildImm(unsigned instr);
 
 #endif
+
+
+
 
