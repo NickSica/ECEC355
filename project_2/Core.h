@@ -8,7 +8,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "HazardDetection.h"
 #include "IF.h"
 #include "ID.h"
 #include "EX.h"
@@ -41,7 +40,3 @@ Core *initCore(Instruction_Memory *i_mem);
 bool tickFunc(Core *core);
 
 #endif
-
-
-
-

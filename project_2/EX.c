@@ -1,10 +1,25 @@
 #include "EX.h"
 
-void forwardUnit(uint8_t rs_1, uint8_t rs_2, uint8_t mem_rd, uint8_t wb_rd, ControlSignals *mem_ctrl, ControlSignals *wb_ctrl)
+uint8_t forwardUnit(uint8_t rs_1, uint8_t rs_2, uint8_t mem_rd, uint8_t wb_rd, uint8_t mem_w_reg, uint8_t wb_w_reg)
 {
-    
-}
+    uint8_t fwd = 0;
+    if(mem_w_reg)
+    {
+	if(rs_1 == mem_rd)
+	    fwd |= (0b01 << 2);
+	if(rs_2 == mem_rd)
+	    fwd |= 0b01;
+    }
 
+    if(wb_w_reg)
+    {
+	if(rs_1 == wb_rd)
+	    fwd |= (0b10 << 2);
+	if(rs_2 == wb_rd)
+	    fwd |= 0b10;
+    }	
+    return fwd;
+}
 
 void alu(int r_data_1, int r_data_2, uint8_t ctrl_signal, int *result, uint8_t *zero)
 {

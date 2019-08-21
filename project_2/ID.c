@@ -1,6 +1,6 @@
 #include "ID.h"
 
-void hazardDetection()
+void hazardDetection(unsigned int instruction, uint8_t mem_rd, ControlSignals *ctrl)
 {
     
 }

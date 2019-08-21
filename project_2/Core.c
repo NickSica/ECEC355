@@ -75,24 +75,25 @@ bool tickFunc(Core *core)
 
     
     // EX
-    uint8_t fwd_src = forwardUnit(core->ex->rs_1, core->ex->rs_2, core->mem->rd, core->wb->rd, core->mem->ctrl, core->wb->ctrl);
+    uint8_t fwd = forwardUnit(core->ex->rs_1, core->ex->rs_2, core->mem->rd, core->wb->rd, core->mem->ctrl->regWrite, core->wb->ctrl->regWrite);
+    
     uint8_t funct7 = ((core->ex->instruction & (0b1111111 << 25)) >> 25);
     uint8_t zero = 0;
     uint8_t alu_ctrl;
     int operand_1;
     int operand_2;
-    if(((fwd_src & (0b11 << 2)) >> 2) == 0b00)
+    if(((fwd & (0b11 << 2)) >> 2) == 0b00)
 	operand_1 = core->ex->read_data_1;
-    else if(((fwd_src & (0b11 << 2)) >> 2) == 0b01)
+    else if(((fwd & (0b11 << 2)) >> 2) == 0b01)
 	operand_1 = w_data;
-    else if(((fwd_src & (0b11 << 2)) >> 2) == 0b10)
+    else if(((fwd & (0b11 << 2)) >> 2) == 0b10)
 	operand_1 = core->mem->result;
 
-    if((fwd_src & 0b11) == 0b00)
+    if((fwd & 0b11) == 0b00)
 	operand_2 = core->ex->read_data_2;
-    else if((fwd_src & 0b11) == 0b01)
+    else if((fwd & 0b11) == 0b01)
 	operand_2 = w_data;
-    else if((fwd_src & 0b11) == 0b10)
+    else if((fwd & 0b11) == 0b10)
 	operand_2 = core->mem->result;
 
     core->mem->mem_data = operand_2;
