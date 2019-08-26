@@ -51,8 +51,6 @@ bool tickFunc(Core *core)
     int w_data;
     if(core->wb->ctrl->memToReg)
 	w_data = core->wb->data;
-    else if(core->wb->ctrl->jal || core->wb->ctrl->jalr)
-	w_data = core->PC + 4;
     else
 	w_data = core->wb->result;
 
@@ -102,6 +100,12 @@ bool tickFunc(Core *core)
     
     if((core->ex->instruction & 0b1111111) == 0b0010011)
 	funct7 = 0;
+
+    if(core->wb->ctrl->jal || core->wb->ctrl->jalr)
+    {
+	operand_1 = core->ex->PC;
+	operand_2 = 4;
+    }
     
     alu_ctrl = aluControl(core->ex->ctrl->aluOp, ((core->ex->instruction & (0b111 << 12)) >> 12), funct7);
     alu(operand_1, operand_2, alu_ctrl, &(core->mem->result), &zero);
@@ -114,7 +118,7 @@ bool tickFunc(Core *core)
     control(core->id->ctrl, (core->id->instruction & 0b1111111), ((core->id->instruction & (0b111 << 12)) >> 12));
     core->ex->read_data_1 = core->reg_file[(core->instr_fetch->instruction & (0b11111 << 15)) >> 15]; 
     core->ex->read_data_2 = core->reg_file[(core->instr_fetch->instruction & (0b11111 << 20)) >> 20];
-    core->ex->imm = buildImm(core->id->instruction);
+    core->id->imm = buildImm(core->id->instruction);
 
     // Compute branch and jump PC's
     unsigned branch_PC = core->id->PC + core->id->imm;

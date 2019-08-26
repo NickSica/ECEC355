@@ -99,3 +99,7 @@ uint8_t aluControl(uint8_t aluOp, uint8_t funct3, uint8_t funct7)
         }
     }
 }
+
+
+
+
