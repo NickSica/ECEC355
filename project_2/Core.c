@@ -30,15 +30,54 @@ Core *initCore(Instruction_Memory *i_mem)
 
     for(int i = 0; i < 16; i++)
     core->data_mem[i*8] = i;
-    */
+						       */
 
+    /* UNCOMMENT TO SET DEFAULT VALUES FOR task_0 */ /*
+    core->reg_file[1] = 0;
+    core->reg_file[2] = 10;
+    core->reg_file[3] = -15;
+    core->reg_file[4] = 20;
+    core->reg_file[5] = 30;
+    core->reg_file[6] = -35;
+    core->data_mem[40] = -63;
+    core->data_mem[43] = 63;
+						     */
+
+    /* UNCOMMENT TO SET DEFAULT VALUES FOR task_1 */ /*
     core->reg_file[1] = 8;
     core->reg_file[3] = -4;
     core->reg_file[5] = 255;
     core->reg_file[6] = 1023;
-    core->data_mem[48] = 63;
-    core->data_mem[40] = -63;
+						     */
 
+    /* UNCOMMENT TO SET DEFAULT VALUES FOR task_1 */ /*
+    core->reg_file[1] = 8;
+    core->reg_file[3] = -15;
+    core->reg_file[5] = 255;
+    core->reg_file[6] = 1023;
+						     */
+
+    /* UNCOMMENT TO SET DEFAULT VALUES FOR task_2 */
+    core->reg_file[5] = 26;
+    core->reg_file[6] = -27;
+    core->data_mem[20] = 100; 
+						    
+    
+    /* UNCOMMENT TO SET DEFAULT VALUES FOR task_3 */ /*
+    core->reg_file[1] = 0;
+    core->reg_file[2] = -5;
+    core->reg_file[5] = -10;
+    core->reg_file[6] = 25;
+    core->data_mem[100] = -100; 
+						     */
+
+    /* UNCOMMENT TO SET DEFAULT VALUES FOR task_3 */ /*
+    core->reg_file[1] = 0;
+    core->reg_file[2] = -5;
+    core->reg_file[5] = -10;
+    core->reg_file[6] = 25;
+    core->data_mem[100] = -100; 
+						     */
     return core;
 }
 
@@ -61,7 +100,7 @@ bool tickFunc(Core *core)
     core->mem->PC = core->ex->PC;
 
     // ID/EX Registers
-    core->ex->ctrl = core->mem->ctrl;
+    core->ex->ctrl = core->id->ctrl;
     core->ex->read_data_1 = core->id->read_data_1;
     core->ex->read_data_2 = core->id->read_data_2;
     core->ex->imm = core->id->imm;
