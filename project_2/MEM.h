@@ -7,9 +7,11 @@
 typedef struct MEM MEM;
 typedef struct MEM
 {
+    Addr PC;
     ControlSignals *ctrl;
-    int result;
-    int mem_data;
+    int64_t result;
+    int64_t w_mem_data;
+    int64_t r_mem_data;
     uint8_t rd;
 } MEM;
 #endif

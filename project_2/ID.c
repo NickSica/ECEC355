@@ -1,8 +1,17 @@
 #include "ID.h"
 
-void hazardDetection(unsigned int instruction, uint8_t mem_rd, ControlSignals *ctrl)
+void hazardDetection(unsigned int instruction, uint8_t ex_rd, ControlSignals *ctrl)
 {
-    
+    if((instruction & 0b1111111) == 0b1100011)  // B-Type
+    {
+    }
+    else if((instruction & 0b1111111) == 0b0000011)  // LD
+    {
+	if((instruction & (0b11111 << 6)) == ex_rd)
+	{
+	    
+	}
+    }
 }
 
 void control(ControlSignals *ctrl_signals, unsigned opcode, uint8_t funct3)

@@ -31,6 +31,7 @@ typedef struct Core
     EX *ex;
     MEM *mem;
     WB *wb;
+    uint8_t done;
 
     // Simulation function
     bool (*tick)(Core *core);

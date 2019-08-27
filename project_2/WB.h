@@ -7,14 +7,11 @@
 typedef struct WB WB;
 typedef struct WB
 {
+    Addr PC;
     ControlSignals *ctrl;
-    int data;
-    int result;
+    int64_t r_mem_data;
+    int64_t result;
     uint8_t rd;
 } WB;
-
-
-
-
 
 #endif
