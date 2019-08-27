@@ -4,7 +4,7 @@ uint8_t hazardDetection(unsigned int instruction, uint8_t ex_rd, ControlSignals 
 {
     if(ctrl->memRead)  // Load-Use Hazard
     {
-	if((instruction & (0b11111 << 6)) == ex_rd)
+	if(((instruction & (0b11111 << 15)) >> 15) == ex_rd || ((instruction & (0b11111 << 20)) >> 20) == ex_rd)
 	{
 	    return 0b000;
 	}

@@ -14,13 +14,13 @@ Core *initCore(Instruction_Memory *i_mem)
     core->instr_fetch = malloc(sizeof(IF));
     core->instr_fetch->PC = 0;
     core->id = malloc(sizeof(ID));
-    core->id->ctrl = malloc(sizeof(ControlSignals));
+    core->id->ctrl = calloc(1, sizeof(ControlSignals));
     core->ex = malloc(sizeof(EX));
-    core->ex->ctrl = malloc(sizeof(ControlSignals));
+    core->ex->ctrl = calloc(1, sizeof(ControlSignals));
     core->mem = malloc(sizeof(MEM));
-    core->mem->ctrl = malloc(sizeof(ControlSignals));
+    core->mem->ctrl = calloc(1, sizeof(ControlSignals));
     core->wb = malloc(sizeof(WB));
-    core->wb->ctrl = malloc(sizeof(ControlSignals));
+    core->wb->ctrl = calloc(1, sizeof(ControlSignals));
 
     /* UNCOMMENT  TO SET DEFAULT VALUES FOR matrix  */ /* 
     core->reg_file[1] = core->instr_mem->last->addr;
@@ -107,6 +107,8 @@ bool tickFunc(Core *core)
     core->ex->rd = (core->id->instruction & (0b11111 << 7)) >> 7;
     core->ex->rs_1 = (core->id->instruction & (0b11111 << 15)) >> 15;
     core->ex->rs_2 = (core->id->instruction & (0b11111 << 20)) >> 20;
+    core->ex->funct7 = core->id->funct7;
+    core->ex->funct3 = (core->id->instruction & (0b111 << 12)) >> 12;
     core->ex->PC = core->id->PC;
     
     // IF/ID Registers
@@ -144,7 +146,6 @@ bool tickFunc(Core *core)
 
     // EX
     uint8_t fwd = forwardUnit(core->ex->rs_1, core->ex->rs_2, core->mem->rd, core->wb->rd, core->mem->ctrl->regWrite, core->wb->ctrl->regWrite);
-    uint8_t funct7 = ((core->ex->instruction & (0b1111111 << 25)) >> 25);
     uint8_t zero = 0;
     uint8_t alu_ctrl;
     int operand_1 = 0;
@@ -167,24 +168,23 @@ bool tickFunc(Core *core)
     if(core->ex->ctrl->aluSrc)
         operand_2 = core->ex->imm;
     
-    if((core->ex->instruction & 0b1111111) == 0b0010011)
-	funct7 = 0;
 
-    if(core->wb->ctrl->jal || core->wb->ctrl->jalr)
+    if(core->ex->ctrl->jal || core->ex->ctrl->jalr)
     {
 	operand_1 = core->ex->PC;
 	operand_2 = 4;
     }
     
-    alu_ctrl = aluControl(core->ex->ctrl->aluOp, ((core->ex->instruction & (0b111 << 12)) >> 12), funct7);
+    alu_ctrl = aluControl(core->ex->ctrl->aluOp, core->ex->funct3, core->ex->funct7);
     alu(operand_1, operand_2, alu_ctrl, &(core->ex->result), &zero);
 
     
     // ID
     uint8_t hazard_bit = hazardDetection(core->id->instruction, core->ex->rd, core->ex->ctrl);
-    uint8_t en_pc = hazard_bit & 1; // Leaving the possibility for the hazard detection to do more
-    uint8_t if_id_en = hazard_bit & (1 << 1);
-    uint8_t ctrl_en = hazard_bit & (1 << 2);
+    uint8_t en_pc = hazard_bit & 0b1; // Leaving the possibility for the hazard detection to do more
+    uint8_t if_id_en = (hazard_bit & (0b1 << 1)) >> 1;
+    uint8_t ctrl_en = (hazard_bit & (0b1 << 2)) >> 2;
+    printf("HAZARD BIT: %u\n", hazard_bit);
     if(core->done)
 	en_pc = 0;    
     
@@ -208,6 +208,12 @@ bool tickFunc(Core *core)
     {
 	branch = 1;
     }
+
+    if((core->id->instruction & 0b1111111) == 0b0010011)
+	core->id->funct7 = 0;
+    else
+	core->id->funct7 = (core->ex->instruction & (0b1111111 << 25)) >> 25;
+
     
     // Compute branch and jump PC's
     unsigned branch_PC = core->id->PC + core->id->imm;
@@ -238,7 +244,8 @@ bool tickFunc(Core *core)
     
     /* UNCOMMENT TO PRINT OUT THE INSTRUCTIONS, REGISTERS, AND DATA MEMORY */
     printf("\nID Stage Instruction: %u\n", core->id->instruction);
-    printf("EX Stage rd: %u    rs1: %u    rs2: %u    imm: %d    result: %d\n", core->ex->rd, core->ex->rs_1, core->ex->rs_2, core->ex->imm, core->ex->result);
+    printf("EX Stage rd: %u    rs1: %u    rs2: %u    imm: %d    operand_1: %d    operand_2: %d    result: %d\n    ALU_CTRL: %u",
+	   core->ex->rd, core->ex->rs_1, core->ex->rs_2, core->ex->imm, operand_1, operand_2, core->ex->result, alu_ctrl);
 
     for(int i = 0; i < NUM_REGS; i++)
         printf("%s: %ld\n", REGISTER_NAME[i], core->reg_file[i]);

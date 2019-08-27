@@ -18,6 +18,8 @@ typedef struct EX
     uint8_t rs_2;
     int64_t w_mem_data;
     int result;
+    uint8_t funct7;
+    uint8_t funct3;
 } EX;
 
 uint8_t forwardUnit(uint8_t rs_1, uint8_t rs_2, uint8_t mem_rd, uint8_t wb_rd, uint8_t mem_w_reg, uint8_t wb_w_reg);

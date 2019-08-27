@@ -6,17 +6,17 @@ uint8_t forwardUnit(uint8_t rs_1, uint8_t rs_2, uint8_t mem_rd, uint8_t wb_rd, u
     if(mem_w_reg)
     {
 	if(rs_1 == mem_rd)
-	    fwd |= (0b01 << 2);
+	    fwd |= (0b10 << 2);
 	if(rs_2 == mem_rd)
-	    fwd |= 0b01;
+	    fwd |= 0b10;
     }
 
     if(wb_w_reg)
     {
 	if(rs_1 == wb_rd)
-	    fwd |= (0b10 << 2);
+	    fwd |= (0b01 << 2);
 	if(rs_2 == wb_rd)
-	    fwd |= 0b10;
+	    fwd |= 0b01;
     }	
     return fwd;
 }
