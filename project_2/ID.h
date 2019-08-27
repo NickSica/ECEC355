@@ -18,7 +18,7 @@ typedef struct ID
     uint8_t rs_2;
 } ID;
 
-void hazardDetection(unsigned int instruction, uint8_t ex_rd, ControlSignals *ctrl);
+uint8_t hazardDetection(unsigned int instruction, uint8_t ex_rd, ControlSignals *ctrl);
 void control(ControlSignals *ctrl_signals, unsigned opcode, uint8_t funct3);
 int buildImm(unsigned instr);
 

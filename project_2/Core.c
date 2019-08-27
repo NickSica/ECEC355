@@ -108,8 +108,8 @@ bool tickFunc(Core *core)
     uint8_t funct7 = ((core->ex->instruction & (0b1111111 << 25)) >> 25);
     uint8_t zero = 0;
     uint8_t alu_ctrl;
-    int operand_1;
-    int operand_2;
+    int operand_1 = 0;
+    int operand_2 = 0;
     if(((fwd & (0b11 << 2)) >> 2) == 0b00)
 	operand_1 = core->ex->read_data_1;
     else if(((fwd & (0b11 << 2)) >> 2) == 0b01)
@@ -142,17 +142,34 @@ bool tickFunc(Core *core)
 
     
     // ID
-    uint8_t en_pc = 1;
-    uint8_t if_id_en = 1;
-    core->id->ctrl = malloc(sizeof(ControlSignals));
-    control(core->id->ctrl, (core->id->instruction & 0b1111111), ((core->id->instruction & (0b111 << 12)) >> 12));
+    uint8_t hazard_bit = hazardDetection(core->id->instruction, core->ex->rd, core->ex->ctrl);
+    uint8_t en_pc = hazard_bit & 1; // Leaving the possibility for the hazard detection to do more
+    uint8_t if_id_en = hazard_bit & (1 << 1);
+    uint8_t ctrl_en = hazard_bit & (1 << 2);
+    if(core->done)
+	en_pc = 0;    
+    
     core->id->read_data_1 = core->reg_file[(core->id->instruction & (0b11111 << 15)) >> 15]; 
     core->id->read_data_2 = core->reg_file[(core->id->instruction & (0b11111 << 20)) >> 20];
     core->id->imm = buildImm(core->id->instruction);
 
-    if(core->done)
-	en_pc = 0;
+    core->id->ctrl = malloc(sizeof(ControlSignals));
+    if(ctrl_en)
+    {
+	control(core->id->ctrl, (core->id->instruction & 0b1111111), ((core->id->instruction & (0b111 << 12)) >> 12));
+    }
+    else
+    {
+	memset(core->id->ctrl, 0, sizeof(ControlSignals));
+    }
 
+    uint8_t branch = 0;
+    if((core->id->ctrl->beq && (core->id->read_data_1 == core->id->read_data_2)) || (core->id->ctrl->bne && (core->id->read_data_1 != core->id->read_data_2)) ||
+       (core->id->ctrl->blt && (core->id->read_data_1 < core->id->read_data_2)) || (core->id->ctrl->bge && (core->id->read_data_1 >= core->id->read_data_2)))
+    {
+	branch = 1;
+    }
+    
     // Compute branch and jump PC's
     unsigned branch_PC = core->id->PC + core->id->imm;
     unsigned jump_PC;
@@ -167,7 +184,7 @@ bool tickFunc(Core *core)
     // Set PC to the correct values if it is enabled
     if(en_pc)
     {
-	if((core->id->ctrl->beq && zero) || (core->id->ctrl->bne && !zero) || (core->ex->ctrl->blt && core->mem->result) || (core->ex->ctrl->bge && (~(core->mem->result) || zero)))
+	if(branch)
 	    core->instr_fetch->PC = branch_PC;
 	else if(core->id->ctrl->jal || core->id->ctrl->jalr)
 	    core->instr_fetch->PC = jump_PC;
@@ -175,7 +192,7 @@ bool tickFunc(Core *core)
 	    core->instr_fetch->PC += 4;
     }
 
-    if(core->done)
+    if(core->done || branch) // Flush IF/ID on branch
 	core->id->instruction = 0b00000000000000000000000000010011; // Insert NOPs to finish up
     else if(if_id_en)
 	core->id->instruction = core->instr_mem->instructions[core->id->PC / 4].instruction;
