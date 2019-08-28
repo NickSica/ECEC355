@@ -131,15 +131,8 @@ bool tickFunc(Core *core)
 
     // MEM
     if(core->mem->ctrl->memWrite)
-    {
-	printf("%ld, %ld\n", core->mem->w_mem_data, sizeof(core->mem->w_mem_data));
 	for(int i = 0; i < 8; i++)
-	{
-	    printf("%d\n", (uint8_t)(core->mem->w_mem_data & (0xFF << (i * 8))));
-	    printf("%u\n", 0b11111111 << (i*8));
-	    core->data_mem[core->mem->result + i] = core->mem->w_mem_data & (0xFF << (i * 8));
-	}
-    }
+	    core->data_mem[core->mem->result + i] = core->mem->w_mem_data & (255UL << (i * 8));
 
     if(core->mem->ctrl->memRead)
     {
@@ -244,11 +237,12 @@ bool tickFunc(Core *core)
     }
 
     
-    /* UNCOMMENT TO PRINT OUT THE INSTRUCTIONS, REGISTERS, AND DATA MEMORY */
+    /* UNCOMMENT TO PRINT OUT THE INSTRUCTIONS, REGISTERS, AND DATA MEMORY */ /*
     printf("\nID Stage Instruction: %u\n", core->id->instruction);
     printf("EX Stage rd: %u    rs1: %u    rs2: %u    imm: %d    operand_1: %d    operand_2: %d    result: %d    MEM_DATA: %d\n",
 	   core->ex->rd, core->ex->rs_1, core->ex->rs_2, core->ex->imm, operand_1, operand_2, core->ex->result, core->ex->w_mem_data);
     printf("MEM_STAGE MEM_DATA: %d\n", core->mem->w_mem_data);
+									      */
 
     for(int i = 0; i < NUM_REGS; i++)
         printf("%s: %ld\n", REGISTER_NAME[i], core->reg_file[i]);
@@ -269,7 +263,7 @@ bool tickFunc(Core *core)
 
     /* UNCOMMENT TO SEE DATA AS UNSIGNED BYTES */
     for(int i = 0; i < NUM_BYTES; i++)
-	printf("Data Address %d: %d\n", i, core->data_mem[i]);
+	printf("Data Address %d: %d\n", i, (int8_t)core->data_mem[i]);
 
     
     ++core->clk;
