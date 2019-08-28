@@ -16,7 +16,7 @@ typedef struct EX
     uint8_t rd;
     uint8_t rs_1;
     uint8_t rs_2;
-    int64_t w_mem_data;
+    int w_mem_data;
     int result;
     uint8_t funct7;
     uint8_t funct3;

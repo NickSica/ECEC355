@@ -6,6 +6,7 @@
 typedef struct IF IF;
 typedef struct IF
 {
+    Addr prevPC;
     Addr PC;
     unsigned instruction;
 } IF;
