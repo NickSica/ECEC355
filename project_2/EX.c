@@ -21,7 +21,7 @@ uint8_t forwardUnit(uint8_t rs_1, uint8_t rs_2, uint8_t mem_rd, uint8_t wb_rd, u
     return fwd;
 }
 
-void alu(int r_data_1, int r_data_2, uint8_t ctrl_signal, int *result, uint8_t *zero)
+void alu(int64_t r_data_1, int64_t r_data_2, uint8_t ctrl_signal, int64_t *result, uint8_t *zero)
 {
     *zero = (r_data_1 == r_data_2);
     switch(ctrl_signal)

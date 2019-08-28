@@ -24,7 +24,7 @@ typedef struct Core
 {
     Tick clk; // Keep track of core clock
     Instruction_Memory *instr_mem;
-    uint64_t reg_file[NUM_REGS];
+    int64_t reg_file[NUM_REGS];
     uint8_t data_mem[NUM_BYTES];
     IF *instr_fetch;
     ID *id;

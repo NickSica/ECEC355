@@ -10,9 +10,9 @@ typedef struct ID
     Addr PC;
     unsigned instruction;
     ControlSignals *ctrl;
-    int read_data_1;
-    int read_data_2;
-    int imm;
+    int64_t read_data_1;
+    int64_t read_data_2;
+    int16_t imm;
     uint8_t rd;
     uint8_t rs_1;
     uint8_t rs_2;

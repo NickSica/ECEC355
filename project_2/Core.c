@@ -40,7 +40,7 @@ Core *initCore(Instruction_Memory *i_mem)
     core->reg_file[5] = 30;
     core->reg_file[6] = -35;
     core->data_mem[40] = -63;
-    core->data_mem[43] = 63;
+    core->data_mem[48] = 63;
 						     */
 
     /* UNCOMMENT TO SET DEFAULT VALUES FOR task_1 */ /*
@@ -119,7 +119,7 @@ bool tickFunc(Core *core)
     // The stages are done in reverse order because of the dependence of the earlier stages on the later stages
     // Using C instead of an HDL causes this
     // WB
-    int w_data;
+    int64_t w_data;
     if(core->wb->ctrl->memToReg)
 	w_data = core->wb->r_mem_data;
     else
@@ -131,14 +131,21 @@ bool tickFunc(Core *core)
 
     // MEM
     if(core->mem->ctrl->memWrite)
+    {
+	printf("%ld, %ld\n", core->mem->w_mem_data, sizeof(core->mem->w_mem_data));
 	for(int i = 0; i < 8; i++)
-	    core->data_mem[core->mem->result + i] = (core->mem->w_mem_data & (0xFF << (i * 8)));
+	{
+	    printf("%d\n", (uint8_t)(core->mem->w_mem_data & (0xFF << (i * 8))));
+	    printf("%u\n", 0b11111111 << (i*8));
+	    core->data_mem[core->mem->result + i] = core->mem->w_mem_data & (0xFF << (i * 8));
+	}
+    }
 
     if(core->mem->ctrl->memRead)
     {
 	core->mem->r_mem_data = 0;
 	for(int i = 0; i < 8; i++)
-	    core->mem->r_mem_data |= (int8_t)(core->data_mem[core->mem->result + i] << (i * 8));
+	    core->mem->r_mem_data |= (uint8_t)(core->data_mem[core->mem->result + i] << (i * 8));
     }
 
 
@@ -146,8 +153,8 @@ bool tickFunc(Core *core)
     uint8_t fwd = forwardUnit(core->ex->rs_1, core->ex->rs_2, core->mem->rd, core->wb->rd, core->mem->ctrl->regWrite, core->wb->ctrl->regWrite);
     uint8_t zero = 0;
     uint8_t alu_ctrl;
-    int operand_1 = 0;
-    int operand_2 = 0;
+    int64_t operand_1 = 0;
+    int64_t operand_2 = 0;
     if(((fwd & (0b11 << 2)) >> 2) == 0b00)
 	operand_1 = core->ex->read_data_1;
     else if(((fwd & (0b11 << 2)) >> 2) == 0b01)
@@ -182,7 +189,6 @@ bool tickFunc(Core *core)
     uint8_t en_pc = hazard_bit & 0b1; // Leaving the possibility for the hazard detection to do more
     uint8_t if_id_en = (hazard_bit & (0b1 << 1)) >> 1;
     uint8_t ctrl_en = (hazard_bit & (0b1 << 2)) >> 2;
-    printf("HAZARD BIT: %u\n", hazard_bit);
     if(core->done)
 	en_pc = 0;    
     
@@ -192,13 +198,9 @@ bool tickFunc(Core *core)
 
     core->id->ctrl = malloc(sizeof(ControlSignals));
     if(ctrl_en)
-    {
 	control(core->id->ctrl, (core->id->instruction & 0b1111111), ((core->id->instruction & (0b111 << 12)) >> 12));
-    }
     else
-    {
 	memset(core->id->ctrl, 0, sizeof(ControlSignals));
-    }
 
     uint8_t branch = 0;
     if((core->id->ctrl->beq && (core->id->read_data_1 == core->id->read_data_2)) || (core->id->ctrl->bne && (core->id->read_data_1 != core->id->read_data_2)) ||
@@ -267,12 +269,12 @@ bool tickFunc(Core *core)
 
     /* UNCOMMENT TO SEE DATA AS UNSIGNED BYTES */
     for(int i = 0; i < NUM_BYTES; i++)
-	printf("Data Address %d: %u\n", i, core->data_mem[i]);
+	printf("Data Address %d: %d\n", i, core->data_mem[i]);
 
     
     ++core->clk;
     // Are we reaching the final instruction?
-    if (core->instr_fetch->PC > core->instr_mem->last->addr)
+    if (core->instr_fetch->prevPC > core->instr_mem->last->addr)
 	core->done = 1;
     
     if(core->wb->PC > core->instr_mem->last->addr)
@@ -280,6 +282,16 @@ bool tickFunc(Core *core)
     
     return true;
 }
+
+
+
+
+
+
+
+
+
+
 
 
 
