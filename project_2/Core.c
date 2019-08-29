@@ -50,18 +50,18 @@ Core *initCore(Instruction_Memory *i_mem)
     core->reg_file[6] = 1023;
 						     */
 
-    /* UNCOMMENT TO SET DEFAULT VALUES FOR task_1 */
+    /* UNCOMMENT TO SET DEFAULT VALUES FOR task_1 */ /*
     core->reg_file[1] = 8;
     core->reg_file[3] = -15;
     core->reg_file[5] = 255;
     core->reg_file[6] = 1023;
-						    
+						     */
 
-    /* UNCOMMENT TO SET DEFAULT VALUES FOR task_2 */ /*
+    /* UNCOMMENT TO SET DEFAULT VALUES FOR task_2 */ 
     core->reg_file[5] = 26;
     core->reg_file[6] = -27;
     core->data_mem[20] = 100; 
-						     */
+						     
     
     /* UNCOMMENT TO SET DEFAULT VALUES FOR task_3 */ /*
     core->reg_file[1] = 0;
@@ -223,7 +223,7 @@ bool tickFunc(Core *core)
     if(core->done || branch || core->id->ctrl->jalr) // Flush IF/ID on branch
 	core->instr_fetch->instruction = 0b00000000000000000000000000010011; // Insert NOPs to finish up
     else if(if_id_en)
-	core->instr_fetch->instruction = core->instr_mem->instructions[core->id->PC / 4].instruction;
+	core->instr_fetch->instruction = core->instr_mem->instructions[core->instr_fetch->PC / 4].instruction;
 
     core->instr_fetch->prevPC = core->instr_fetch->PC;  // The instructions won't get the right PC if this isn't set
     if(en_pc)
@@ -237,12 +237,13 @@ bool tickFunc(Core *core)
     }
 
     
-    /* UNCOMMENT TO PRINT OUT THE INSTRUCTIONS, REGISTERS, AND DATA MEMORY */ /*
+    /* UNCOMMENT TO PRINT OUT THE INSTRUCTIONS, REGISTERS, AND DATA MEMORY */
     printf("\nID Stage Instruction: %u\n", core->id->instruction);
-    printf("EX Stage rd: %u    rs1: %u    rs2: %u    imm: %d    operand_1: %d    operand_2: %d    result: %d    MEM_DATA: %d\n",
+    printf("EX Stage rd: %u    rs1: %u    rs2: %u    imm: %d    operand_1: %ld    operand_2: %ld    result: %ld    MEM_DATA: %ld\n",
 	   core->ex->rd, core->ex->rs_1, core->ex->rs_2, core->ex->imm, operand_1, operand_2, core->ex->result, core->ex->w_mem_data);
-    printf("MEM_STAGE MEM_DATA: %d\n", core->mem->w_mem_data);
-									      */
+    printf("MEM_STAGE MEM_DATA: %ld\n", core->mem->w_mem_data);
+    printf("HAZARD BITS: %u\n", hazard_bit);
+									      
 
     for(int i = 0; i < NUM_REGS; i++)
         printf("%s: %ld\n", REGISTER_NAME[i], core->reg_file[i]);
@@ -261,10 +262,10 @@ bool tickFunc(Core *core)
     }
 						*/
 
-    /* UNCOMMENT TO SEE DATA AS UNSIGNED BYTES */
+    /* UNCOMMENT TO SEE DATA AS UNSIGNED BYTES */ /*
     for(int i = 0; i < NUM_BYTES; i++)
 	printf("Data Address %d: %d\n", i, (int8_t)core->data_mem[i]);
-
+						  */
     
     ++core->clk;
     // Are we reaching the final instruction?
